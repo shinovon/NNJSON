@@ -1,0 +1,9 @@
+*.jar
+*.zip
+# Compiled classes folder
+bin
+# Eclipse settings
+.settings
+
+.project
+.classpath
