@@ -148,15 +148,11 @@ public final class JSON {
 										case 'u':
 											i++;
 											String u = "" + str.charAt(i++) + str.charAt(i++) + str.charAt(i++) + str.charAt(i++);
-											if (u.charAt(2) < '0' || u.charAt(2) > 'F' || u.charAt(3) < '0' || u.charAt(3) > 'F')
-												throw new JSONException("Wrong hex");
 											sb.append((char) Integer.parseInt(u, 16));
 											break replaced;
 										case 'x':
 											i++;
 											String x = "" + str.charAt(i++) + str.charAt(i++);
-											if (x.charAt(0) < '0' || x.charAt(0) > 'F' || x.charAt(1) < '0' || x.charAt(1) > 'F')
-												throw new JSONException("Wrong hex");
 											sb.append((char) Integer.parseInt(x, 16));
 											break replaced;
 										case 'n':
