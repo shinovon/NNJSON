@@ -13,18 +13,14 @@ public class Test {
 			System.out.println(j.getObject("response").getArray("items").getObject(1).getObject("photos").getInt("count"));
 			get2 = System.currentTimeMillis() - get2;
 			long build = System.currentTimeMillis();
-			j.build();
+			System.out.println(j.build());
 			build = System.currentTimeMillis() - build;
+			long format = System.currentTimeMillis();
+			System.out.println(j.format());
+			format = System.currentTimeMillis() - format;
 			System.out.println("parse_members: " + JSON.parse_members);
 			System.out.println("build_functions: " + JSON.build_functions);
-			System.out.println("parse: " + parse + "ms get1: " + get1 + "ms get2: " + get2 + "ms build: " + build + "ms");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		try {
-
-			JSONObject j = JSON.getObject("{\"s\":\"A\\nA\"}");
-			System.out.println(j.getString("s"));
+			System.out.println("parse: " + parse + "ms get1: " + get1 + "ms get2: " + get2 + "ms build: " + build + "ms format: " + format + "ms");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
