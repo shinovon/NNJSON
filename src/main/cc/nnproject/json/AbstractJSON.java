@@ -21,17 +21,15 @@ SOFTWARE.
 */
 package cc.nnproject.json;
 
-public class JSONException extends RuntimeException {
+public abstract class AbstractJSON {
 	
-	JSONException() {
+	public abstract void clear();
+	public abstract int size();
+	public abstract String toString();
+	public abstract String build();
+	public final String format() {
+		return format(0);
 	}
-	
-	JSONException(String string) {
-		super(string);
-	}
-	
-	public String toString() {
-		return getMessage() == null ? "JSONException" : "JSONException: " + getMessage();
-	}
+	protected abstract String format(int l);
 
 }

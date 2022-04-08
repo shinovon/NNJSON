@@ -18,8 +18,6 @@ public class Test {
 			long format = System.currentTimeMillis();
 			System.out.println(j.format());
 			format = System.currentTimeMillis() - format;
-			System.out.println("parse_members: " + JSON.parse_members);
-			System.out.println("build_functions: " + JSON.build_functions);
 			System.out.println("parse: " + parse + "ms get1: " + get1 + "ms get2: " + get2 + "ms build: " + build + "ms format: " + format + "ms");
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -1,3 +1,24 @@
+/*
+Copyright (c) 2022 Arman Jussupgaliyev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 package cc.nnproject.json;
 
 import java.util.Hashtable;
@@ -5,9 +26,9 @@ import java.util.Vector;
 
 /**
  * JSON Library by nnproject.cc<br>
- * Usage:<p><code>JSONObject obj = NNJSON.getObject(str);</code>
+ * Usage:<p><code>JSONObject obj = JSON.getObject(str);</code>
  * @author Shinovon
- * @version 1.0
+ * @version 1.1
  */
 public final class JSON {
 
@@ -15,12 +36,13 @@ public final class JSON {
 	 * Parse all members once
 	 */
 	public final static boolean parse_members = false;
-	/**
-	 * Enable build functions
-	 */
-	public final static boolean build_functions = true;
-	public final static String format_space = "  ";
+	
 	public final static Object null_equivalent = new NullEquivalent();
+
+	public static final String FORMAT_TAB = "  ";
+	
+	public static final Boolean TRUE = new Boolean(true);
+	public static final Boolean FALSE = new Boolean(false);
 
 	public static JSONObject getObject(String string) throws JSONException {
 		if (string == null || string.length() <= 1)
@@ -54,105 +76,43 @@ public final class JSON {
 		if (str.length() < 2) {
 			return str;
 		} else {
+			str = str.trim();
 			char first = str.charAt(0);
-			char last = str.charAt(str.length() - 1);
+			int length = str.length() - 1;
+			char last = str.charAt(length);
 			if (first == '{' && last != '}' || first == '[' && last != ']' || first == '"' && last != '"') {
 				throw new JSONException("Unexpected end of text");
 			} else if (first == '"') {
 				// String
 				str = str.substring(1, str.length() - 1);
+				char[] chars = str.toCharArray();
+				str = null;
 				try {
-					int l = str.length();
+					int l = chars.length;
 					StringBuffer sb = new StringBuffer();
 					int i = 0;
 					// Parse string escape chars
 					loop: {
 						while (i < l) {
-							char c = str.charAt(i);
+							char c = chars[i];
 							switch (c) {
-							/*
-							case '&': {
-								next: {
-									replaced: {
-										if(str.length() < i + 1) {
-											sb.append(c);
-											break loop;
-										}
-										try {
-											switch (str.charAt(i + 1)) {
-											case 'a':
-												if(str.charAt(i + 2) == 'm' && str.charAt(i + 3) == 'p' && str.charAt(i + 4) == ';') {
-													i += 5;
-													sb.append('&');
-													break replaced;
-												}
-												break next;
-											case 'l':
-												if(str.charAt(i + 2) == 't' && str.charAt(i + 3) == ';') {
-													i += 4;
-													sb.append('<');
-													break replaced;
-												}
-												break next;
-											case 'g':
-												if(str.charAt(i + 2) == 't' && str.charAt(i + 3) == ';') {
-													i += 4;
-													sb.append('>');
-													break replaced;
-												}
-												break next;
-											case 'q':
-												if(str.charAt(i + 2) == 'u' && str.charAt(i + 3) == 'o' && str.charAt(i + 4) == 't' && str.charAt(i + 5) == ';') {
-													i += 6;
-													sb.append('\"');
-													break replaced;
-												}
-												break next;
-											default:
-												break next;
-											}
-										} catch (Exception e) {
-											break next;
-										}
-									}
-									break;
-								}
-								sb.append(c);
-								i++;
-								break;
-							}
-							*/
-							case '<' : {
-								if(str.length() < i + 1) {
-									sb.append(c);
-									break loop;
-								}
-								try {
-									if(str.charAt(i + 1) == 'b' && str.charAt(i + 2) == 'r' && str.charAt(i + 3) == '>') 
-										break;
-								} catch (Exception e) {
-								}
-								sb.append(c);
-								i++;
-								break;
-							}
 							case '\\': {
 								next: {
 									replaced: {
-										if(str.length() < i + 1) {
+										if(l < i + 1) {
 											sb.append(c);
 											break loop;
 										}
-										char c1 = str.charAt(i + 1);
+										char c1 = chars[i + 1];
 										switch (c1) {
 										case 'u':
-											i++;
-											String u = "" + str.charAt(i++) + str.charAt(i++) + str.charAt(i++) + str.charAt(i++);
+											i+=2;
+											String u = "" + chars[i++] + chars[i++] + chars[i++] + chars[i++];
 											sb.append((char) Integer.parseInt(u, 16));
 											break replaced;
 										case 'x':
-											i++;
-											String x = "" + str.charAt(i++) + str.charAt(i++);
+											i+=2;
+											String x = "" + chars[i++] + chars[i++];
 											sb.append((char) Integer.parseInt(x, 16));
 											break replaced;
 										case 'n':
@@ -199,6 +159,7 @@ public final class JSON {
 						}
 					}
 					str = sb.toString();
+					sb = null;
 				} catch (Exception e) {
 				}
 
@@ -207,9 +168,9 @@ public final class JSON {
 				if (str.equals("null"))
 					return null_equivalent;
 				if (str.equals("true"))
-					return Boolean.TRUE;
+					return TRUE;
 				if (str.equals("false"))
-					return Boolean.FALSE;
+					return FALSE;
 				if(str.charAt(0) == '0' && str.charAt(1) == 'x') {
 					try {
 						return new Integer(Integer.parseInt(str.substring(2), 16));
@@ -217,34 +178,15 @@ public final class JSON {
 						try {
 							return new Long(Long.parseLong(str.substring(2), 16));
 						} catch (Exception e2) {
-							// Skip
 						}
 					}
 				}
-				try {
-					return Integer.valueOf(str);
-				} catch (Exception e) {
-					try {
-						return new Long(Long.parseLong(str));
-					} catch (Exception e2) {
-						try {
-							return Double.valueOf(str);
-						} catch (Exception e3) {
-						}
-					}
-				}
-				/*
-				if(str.length() == 0 || str.equals("") || str.equals(" "))
-					throw new JSONException("Empty value");
-				throw new JSONException("Unknown value: " + str);
-				*/
 				return str;
 			} else {
 				// Parse json object or array
 				int unclosed = 0;
 				boolean object = first == '{';
 				int i = 1;
-				int length = str.length() - 1;
 				char nextDelimiter = object ? ':' : ',';
 				boolean escape = false;
 				String key = null;
@@ -254,7 +196,7 @@ public final class JSON {
 				
 				for (int splIndex; i < length; i = splIndex + 1) {
 					// skip all spaces
-					for (char ci; i < length - 1 && ((ci = str.charAt(i)) == ' ' || ci == '\n' || ci == '\r' || ci == '	'); i++);
+					for (; i < length - 1 && str.charAt(i) <= ' '; i++);
 
 					splIndex = i;
 					boolean quotes = false;
@@ -283,12 +225,6 @@ public final class JSON {
 
 					if (object && key == null) {
 						key = str.substring(i, splIndex);
-						//while(n.startsWith("\r") || n.startsWith("\n")) {
-						//	n = n.substring(1);
-						//}
-						//while(n.endsWith("\r") || n.endsWith("\n") || n.endsWith(" ")) {
-						//	n = n.substring(0, n.length() - 1);
-						//}
 						key = key.substring(1, key.length() - 1);
 						nextDelimiter = ',';
 					} else {
@@ -313,51 +249,47 @@ public final class JSON {
 	public static boolean isNull(Object obj) {
 		return null_equivalent.equals(obj);
 	}
-	
+
 	public static String escape_utf8(String s) {
-		if(!build_functions) {
-			return "";
-		} else {
-			int len = s.length();
-			StringBuffer sb = new StringBuffer();
-			int i = 0;
-			while (i < len) {
-				char c = s.charAt(i);
-				switch(c) {
-				case '"':
-				case '\\':
-					sb.append("\\" + c);
-					break;
-				case '\b':
-					sb.append("\\b");
-					break;
-				case '\f':
-					sb.append("\\f");
-					break;
-				case '\n':
-					sb.append("\\n");
-					break;
-				case '\r':
-					sb.append("\\r");
-					break;
-				case '\t':
-					sb.append("\\t");
-					break;
-				default:
-					if(c < 32 || c > 1103) {
-						String u = Integer.toHexString(c);
-						for(int z = u.length(); z < 4; z++) {
-							u = "0" + u;
-						}
-						sb.append("\\u" + u);
-					} else {
-						sb.append(c);
+		int len = s.length();
+		StringBuffer sb = new StringBuffer();
+		int i = 0;
+		while (i < len) {
+			char c = s.charAt(i);
+			switch (c) {
+			case '"':
+			case '\\':
+				sb.append("\\" + c);
+				break;
+			case '\b':
+				sb.append("\\b");
+				break;
+			case '\f':
+				sb.append("\\f");
+				break;
+			case '\n':
+				sb.append("\\n");
+				break;
+			case '\r':
+				sb.append("\\r");
+				break;
+			case '\t':
+				sb.append("\\t");
+				break;
+			default:
+				if (c < 32 || c > 1103) {
+					String u = Integer.toHexString(c);
+					for (int z = u.length(); z < 4; z++) {
+						u = "0" + u;
 					}
+					sb.append("\\u" + u);
+				} else {
+					sb.append(c);
 				}
-				i++;
 			}
-			return sb.toString();
+			i++;
 		}
+		return sb.toString();
 	}
 
 	static class NullEquivalent {
@@ -380,32 +312,28 @@ public final class JSON {
 				return new Double(((Long)o).doubleValue());
 			else if (o instanceof Double)
 				return (Double) o;
-			//else if (o instanceof Float)
-			//	return new Double(((Float)o).doubleValue());
 			else if (o instanceof String)
 				return Double.valueOf((String) o);
 		} catch (Throwable e) {
 		}
 		throw new JSONException("Value cast failed: " + o);
 	}
-/*
-	public static Float getFloat(Object o) throws NNJSONException {
+
+	public static Long getLong(Object o) throws JSONException {
 		try {
 			if (o instanceof Short)
-				return new Float(((Short)o).floatValue());
+				return new Long(((Short)o).shortValue());
 			else if (o instanceof Integer)
-				return new Float(((Integer)o).floatValue());
+				return new Long(((Integer)o).longValue());
 			else if (o instanceof Long)
-				return new Float(((Long)o).floatValue());
+				return (Long) o;
 			else if (o instanceof Double)
-				return new Float(((Double)o).floatValue());
-			else if (o instanceof Float)
-				return (Float) o;
+				return new Long(((Double)o).longValue());
 			else if (o instanceof String)
-				return Float.valueOf((String) o);
+				return new Long(Long.parseLong((String) o));
 		} catch (Throwable e) {
 		}
-		throw new NNJSONException("Value cast failed: " + o);
+		throw new JSONException("Value cast failed: " + o);
 	}
-*/
+	
 }
