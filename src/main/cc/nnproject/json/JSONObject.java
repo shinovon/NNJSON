@@ -47,8 +47,8 @@ public class JSONObject extends AbstractJSON {
 					return table.get(name);
 				} else {
 					Object o = table.get(name);
-					if (o instanceof String)
-						table.put(name, o = JSON.parseJSON((String) o));
+					if (o instanceof JSONString)
+						table.put(name, o = JSON.parseJSON(o.toString()));
 					return o;
 				}
 			}
@@ -242,7 +242,7 @@ public class JSONObject extends AbstractJSON {
 			s += ",";
 		}
 	}
-	
+
 	protected String format(int l) {
 		if (size() == 0)
 			return "{}";

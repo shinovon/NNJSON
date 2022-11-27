@@ -42,8 +42,9 @@ public class JSONArray extends AbstractJSON {
 				return vector.elementAt(index);
 			else {
 				Object o = vector.elementAt(index);
-				if (o instanceof String)
-					vector.setElementAt(o = JSON.parseJSON((String) o), index);
+				if (o instanceof JSONString) {
+					vector.setElementAt(o = JSON.parseJSON(o.toString()), index);
+				}
 				return o;
 			}
 		} catch (Exception e) {
@@ -180,7 +181,7 @@ public class JSONArray extends AbstractJSON {
 	public String toString() {
 		return "JSONArray " + vector.toString();
 	}
-	
+
 	public String build() {
 		if (size() == 0)
 			return "[]";
@@ -206,7 +207,7 @@ public class JSONArray extends AbstractJSON {
 		return s;
 	}
 
-	public String format(int l) {
+	protected String format(int l) {
 		if (size() == 0)
 			return "[]";
 		String t = "";
@@ -253,6 +254,16 @@ public class JSONArray extends AbstractJSON {
 				}
 			}
 		};
+	}
+	
+	public void copyInto(Object[] arr, int offset, int length) {
+		int i = offset;
+		int j = 0;
+		while(i < arr.length && j < length && j < size()) {
+			Object o = get(j++);
+			if(o == JSON.null_equivalent) o = null;
+			arr[i++] = o;
+		}
 	}
 
 }
