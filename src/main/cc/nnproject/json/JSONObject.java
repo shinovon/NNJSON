@@ -193,7 +193,7 @@ public class JSONObject extends AbstractJSON {
 	}
 
 	public void put(String name, String s) {
-		table.put(name, "\"".concat(s).concat("\""));
+		table.put(name, s);
 	}
 	
 	public void put(String name, Object obj) {
@@ -221,14 +221,7 @@ public class JSONObject extends AbstractJSON {
 		while (true) {
 			String k = elements.nextElement().toString();
 			s += "\"" + k + "\":";
-			Object v = null;
-			try {
-				v = table.get(k);
-				if(v instanceof String) {
-					v = JSON.parseJSON((String) v);
-				}
-			} catch (JSONException e) {
-			}
+			Object v = get(k);
 			if (v instanceof JSONObject) {
 				s += ((JSONObject) v).build();
 			} else if (v instanceof JSONArray) {

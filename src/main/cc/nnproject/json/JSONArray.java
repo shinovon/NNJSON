@@ -163,7 +163,7 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public void put(String s) {
-		vector.addElement("\"".concat(s).concat("\""));
+		vector.addElement(s);
 	}
 	
 	public void put(Object obj) {
@@ -188,11 +188,7 @@ public class JSONArray extends AbstractJSON {
 		String s = "[";
 		int i = 0;
 		while(i < size()) {
-			Object v = null;
-			try {
-				v = get(i);
-			} catch (JSONException e) {
-			}
+			Object v = get(i);
 			if (v instanceof JSONObject) {
 				s += ((JSONObject) v).build();
 			} else if (v instanceof JSONArray) {

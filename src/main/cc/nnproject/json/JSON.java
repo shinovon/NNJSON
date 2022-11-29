@@ -71,9 +71,9 @@ public final class JSON {
 	}
 
 	static Object parseJSON(String str) throws JSONException {
-		if (str == null || str.length() == 0)
-		throw new JSONException("Empty string");
-		str = str.trim();
+		if(str == null || (str = str.trim()).length() == 0) {
+			throw new JSONException("Empty string");
+		}
 		char first = str.charAt(0);
 		int length = str.length() - 1;
 		char last = str.charAt(length);
@@ -168,7 +168,7 @@ public final class JSON {
 				return TRUE;
 			if (str.equals("false"))
 				return FALSE;
-			if(str.charAt(0) == '0' && str.charAt(1) == 'x') {
+			if(str.length() > 2 && str.charAt(0) == '0' && str.charAt(1) == 'x') {
 				try {
 					return new Integer(Integer.parseInt(str.substring(2), 16));
 				} catch (Exception e) {
