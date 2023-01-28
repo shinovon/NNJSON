@@ -162,12 +162,28 @@ public class JSONArray extends AbstractJSON {
 		}
 	}
 	
-	public void put(String s) {
+	public void add(String s) {
 		vector.addElement(s);
 	}
 	
-	public void put(Object obj) {
+	public void add(Object obj) {
 		vector.addElement(JSON.getJSON(obj));
+	}
+	
+	public void set(int idx, String s) {
+		vector.setElementAt(s, idx);
+	}
+	
+	public void set(int idx, Object obj) {
+		vector.setElementAt(JSON.getJSON(obj), idx);
+	}
+	
+	public void put(int idx, String s) {
+		vector.insertElementAt(s, idx);
+	}
+	
+	public void put(int idx, Object obj) {
+		vector.insertElementAt(JSON.getJSON(obj), idx);
 	}
 	
 	public void clear() {
