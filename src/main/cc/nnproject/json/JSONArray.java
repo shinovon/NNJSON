@@ -236,8 +236,8 @@ public class JSONArray extends AbstractJSON {
 				v = get(i);
 			} catch (JSONException e) {
 			}
-			if (v instanceof JSONObject) {
-				s += ((JSONObject) v).format(l + 1);
+			if (v instanceof AbstractJSON) {
+				s += ((AbstractJSON) v).format(l + 1);
 			} else if (v instanceof String) {
 				s += "\"" + JSON.escape_utf8(v.toString()) + "\"";
 			} else s += v;
