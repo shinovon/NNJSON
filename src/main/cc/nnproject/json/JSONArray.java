@@ -195,15 +195,55 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public String toString() {
-		return "JSONArray " + vector.toString();
+		return build();
+	}
+	
+	public boolean equals(Object obj) {
+		if(this == obj || super.equals(obj)) {
+			return true;
+		}
+		return similar(obj);
+	}
+	
+	public boolean similar(Object obj) {
+        if(!(obj instanceof JSONArray)) {
+            return false;
+        }
+        int size = size();
+        if(size != ((JSONArray)obj).size()) {
+        	return false;
+        }
+        for(int i = 0; i < size; i++) {
+        	Object a = get(i);
+        	Object b = ((JSONArray)obj).get(i);
+        	if(a == b) {
+        		continue;
+        	}
+        	if(a == null) {
+        		return false;
+        	}
+        	if(a instanceof JSONObject) {
+        		if (!((JSONObject)a).similar(b)) {
+        			return false;
+        		}
+        	} else if(a instanceof JSONArray) {
+        		if (!((JSONArray)a).similar(b)) {
+        			return false;
+        		}
+        	} else  if(!a.equals(b)) {
+        		return false;
+        	}
+        }
+        return true;
 	}
 
 	public String build() {
-		if (size() == 0)
+		int size = size();
+		if (size == 0)
 			return "[]";
 		String s = "[";
 		int i = 0;
-		while(i < size()) {
+		while(i < size) {
 			Object v = get(i);
 			if (v instanceof JSONObject) {
 				s += ((JSONObject) v).build();
@@ -213,14 +253,15 @@ public class JSONArray extends AbstractJSON {
 				s += "\"" + JSON.escape_utf8(v.toString()) + "\"";
 			} else s += v;
 			i++;
-			if (i < size()) s += ",";
+			if (i < size) s += ",";
 		}
 		s += "]";
 		return s;
 	}
 
 	protected String format(int l) {
-		if (size() == 0)
+		int size = size();
+		if (size == 0)
 			return "[]";
 		String t = "";
 		String s = "";
@@ -230,7 +271,7 @@ public class JSONArray extends AbstractJSON {
 		String t2 = t + JSON.FORMAT_TAB;
 		s += "[\n";
 		s += t2;
-		for (int i = 0; i < size(); ) {
+		for (int i = 0; i < size; ) {
 			Object v = null;
 			try {
 				v = get(i);
@@ -242,7 +283,7 @@ public class JSONArray extends AbstractJSON {
 				s += "\"" + JSON.escape_utf8(v.toString()) + "\"";
 			} else s += v;
 			i++;
-			if(i < size()) s += ",\n" + t2;
+			if(i < size) s += ",\n" + t2;
 		}
 		if (l > 0) {
 			s += "\n" + t + "]";

@@ -31,5 +31,6 @@ public abstract class AbstractJSON {
 		return format(0);
 	}
 	protected abstract String format(int l);
+	public abstract boolean similar(Object obj);
 
 }

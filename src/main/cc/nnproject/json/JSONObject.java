@@ -209,7 +209,48 @@ public class JSONObject extends AbstractJSON {
 	}
 	
 	public String toString() {
-		return "JSONObject " + table.toString();
+		return build();
+	}
+	
+	public boolean equals(Object obj) {
+		if(this == obj || super.equals(obj)) {
+			return true;
+		}
+		return similar(obj);
+	}
+	
+	public boolean similar(Object obj) {
+        if(!(obj instanceof JSONObject)) {
+            return false;
+        }
+        int size = size();
+        if(size != ((JSONObject)obj).size()) {
+        	return false;
+        }
+    	Enumeration keys = table.keys();
+    	while(keys.hasMoreElements()) {
+    		String key = (String) keys.nextElement();
+    		Object a = get(key);
+    		Object b = ((JSONObject)obj).get(key);
+    		if(a == b) {
+    			continue;
+    		}
+    		if(a == null) {
+    			return false;
+    		}
+    		if(a instanceof JSONObject) {
+    			if(!((JSONObject) a).similar(b)) {
+    				return false;
+    			}
+    		} else if(a instanceof JSONArray) {
+    			if(!((JSONArray) a).similar(b)) {
+    				return false;
+    			}
+    		} else if(!a.equals(b)) {
+    			return false;
+    		}
+    	}
+    	return true;
 	}
 
 	public String build() {
@@ -217,9 +258,9 @@ public class JSONObject extends AbstractJSON {
 		if (l == 0)
 			return "{}";
 		String s = "{";
-		java.util.Enumeration elements = table.keys();
+		Enumeration keys = table.keys();
 		while (true) {
-			String k = elements.nextElement().toString();
+			String k = keys.nextElement().toString();
 			s += "\"" + k + "\":";
 			Object v = get(k);
 			if (v instanceof JSONObject) {
@@ -229,7 +270,7 @@ public class JSONObject extends AbstractJSON {
 			} else if (v instanceof String) {
 				s += "\"" + JSON.escape_utf8((String) v) + "\"";
 			} else s += v.toString();
-			if(!elements.hasMoreElements()) {
+			if(!keys.hasMoreElements()) {
 				return s + "}";
 			}
 			s += ",";
@@ -247,9 +288,10 @@ public class JSONObject extends AbstractJSON {
 		String t2 = t + JSON.FORMAT_TAB;
 		s += "{\n";
 		s += t2;
-		Enumeration elements = table.keys();
-		for (int i = 0; elements.hasMoreElements(); ) {
-			String k = elements.nextElement().toString();
+		Enumeration keys = table.keys();
+		int i = 0;
+		while(keys.hasMoreElements()) {
+			String k = keys.nextElement().toString();
 			s += "\"" + k + "\": ";
 			Object v = null;
 			try {
