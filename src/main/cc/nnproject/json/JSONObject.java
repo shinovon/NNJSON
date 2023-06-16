@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2022 Arman Jussupgaliyev
+Copyright (c) 2023 Arman Jussupgaliyev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,14 +43,10 @@ public class JSONObject extends AbstractJSON {
 	public Object get(String name) throws JSONException {
 		try {
 			if (has(name)) {
-				if (JSON.parse_members) {
-					return table.get(name);
-				} else {
-					Object o = table.get(name);
-					if (o instanceof JSONString)
-						table.put(name, o = JSON.parseJSON(o.toString()));
-					return o;
-				}
+				Object o = table.get(name);
+				if (o instanceof JSONString)
+					table.put(name, o = JSON.parseJSON(o.toString()));
+				return o;
 			}
 		} catch (JSONException e) {
 			throw e;
@@ -127,7 +123,7 @@ public class JSONObject extends AbstractJSON {
 	}
 	
 	public int getInt(String name) throws JSONException {
-		return (int) JSON.getLong(get(name)).longValue();
+		return (int) JSON.getLong(get(name));
 	}
 	
 	public int getInt(String name, int def) {
@@ -140,7 +136,7 @@ public class JSONObject extends AbstractJSON {
 	}
 	
 	public long getLong(String name) throws JSONException {
-		return JSON.getLong(get(name)).longValue();
+		return JSON.getLong(get(name));
 	}
 
 	public long getLong(String name, long def) {
@@ -153,7 +149,7 @@ public class JSONObject extends AbstractJSON {
 	}
 	
 	public double getDouble(String name) throws JSONException {
-		return JSON.getDouble(get(name)).doubleValue();
+		return JSON.getDouble(get(name));
 	}
 
 	public double getDouble(String name, double def) {
@@ -188,16 +184,36 @@ public class JSONObject extends AbstractJSON {
 		}
 	}
 	
-	public boolean isNull(String name) throws JSONException {
-		return JSON.isNull(get(name));
+	public boolean isNull(String name) {
+		return JSON.isNull(getNullable(name));
 	}
 
 	public void put(String name, String s) {
 		table.put(name, s);
 	}
+
+	public void put(String name, boolean b) {
+		table.put(name, new Boolean(b));
+	}
+
+	public void put(String name, double d) {
+		table.put(name, new Double(d));
+	}
+
+	public void put(String name, int i) {
+		table.put(name, new Integer(i));
+	}
+
+	public void put(String name, long l) {
+		table.put(name, new Long(l));
+	}
 	
 	public void put(String name, Object obj) {
 		table.put(name, JSON.getJSON(obj));
+	}
+	
+	public void remove(String name) {
+		table.remove(name);
 	}
 	
 	public void clear() {
@@ -238,15 +254,11 @@ public class JSONObject extends AbstractJSON {
     		if(a == null) {
     			return false;
     		}
-    		if(a instanceof JSONObject) {
-    			if(!((JSONObject) a).similar(b)) {
-    				return false;
-    			}
-    		} else if(a instanceof JSONArray) {
-    			if(!((JSONArray) a).similar(b)) {
-    				return false;
-    			}
-    		} else if(!a.equals(b)) {
+    		if(a instanceof AbstractJSON) {
+        		if (!((AbstractJSON)a).similar(b)) {
+        			return false;
+        		}
+        	} else if(!a.equals(b)) {
     			return false;
     		}
     	}
@@ -254,68 +266,86 @@ public class JSONObject extends AbstractJSON {
 	}
 
 	public String build() {
-		int l = size();
-		if (l == 0)
+		if (size() == 0)
 			return "{}";
-		String s = "{";
+		StringBuffer s = new StringBuffer("{");
 		Enumeration keys = table.keys();
 		while (true) {
 			String k = keys.nextElement().toString();
-			s += "\"" + k + "\":";
-			Object v = get(k);
-			if (v instanceof JSONObject) {
-				s += ((JSONObject) v).build();
-			} else if (v instanceof JSONArray) {
-				s += ((JSONArray) v).build();
+			s.append("\"").append(k).append("\":");
+			Object v = table.get(k);
+			if (v instanceof AbstractJSON) {
+				s.append(((AbstractJSON) v).build());
 			} else if (v instanceof String) {
-				s += "\"" + JSON.escape_utf8((String) v) + "\"";
-			} else s += v.toString();
-			if(!keys.hasMoreElements()) {
-				return s + "}";
+				s.append("\"").append(JSON.escape_utf8((String) v)).append("\"");
+			} else if(JSON.json_null.equals(v)) {
+				s.append((String) null);
+			} else {
+				s.append(v);
 			}
-			s += ",";
+			if (!keys.hasMoreElements()) {
+				break;
+			}
+			s.append(",");
 		}
+		s.append("}");
+		return s.toString();
 	}
 
 	protected String format(int l) {
-		if (size() == 0)
+		int size = size();
+		if (size == 0)
 			return "{}";
 		String t = "";
-		String s = "";
 		for (int i = 0; i < l; i++) {
-			t += JSON.FORMAT_TAB;
+			t = t.concat(JSON.FORMAT_TAB);
 		}
-		String t2 = t + JSON.FORMAT_TAB;
-		s += "{\n";
-		s += t2;
+		String t2 = t.concat(JSON.FORMAT_TAB);
+		StringBuffer s = new StringBuffer("{\n");
+		s.append(t2);
 		Enumeration keys = table.keys();
 		int i = 0;
 		while(keys.hasMoreElements()) {
 			String k = keys.nextElement().toString();
-			s += "\"" + k + "\": ";
+			s.append("\"").append(k).append("\": ");
 			Object v = null;
 			try {
 				v = get(k);
 			} catch (JSONException e) {
 			}
 			if (v instanceof AbstractJSON) {
-				s += ((AbstractJSON) v).format(l + 1);
+				s.append(((AbstractJSON) v).format(l + 1));
 			} else if (v instanceof String) {
-				s += "\"" + JSON.escape_utf8(v.toString()) + "\"";
-			} else s += v;
+				s.append("\"").append(JSON.escape_utf8((String) v)).append("\"");
+			} else if(v == JSON.json_null) {
+				s.append((String) null);
+			} else {
+				s.append(v);
+			}
 			i++;
-			if(i < size()) s += ",\n" + t2;
+			if (i < size) {
+				s.append(",\n").append(t2);
+			}
 		}
 		if (l > 0) {
-			s += "\n" + t + "}";
+			s.append("\n").append(t).append("}");
 		} else {
-			s += "\n}";
+			s.append("\n}");
 		}
-		return s;
+		return s.toString();
 	}
 
 	public Enumeration keys() {
 		return table.keys();
+	}
+
+	public JSONArray keysAsArray() {
+		JSONArray array = new JSONArray();
+		Enumeration keys = table.keys();
+		while(keys.hasMoreElements()) {
+			array.add(keys.nextElement());
+		}
+		return array;
 	}
 
 }
