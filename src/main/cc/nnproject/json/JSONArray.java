@@ -417,7 +417,23 @@ public class JSONArray extends AbstractJSON {
 		return vector.contains(JSON.getJSON(o));
 	}
 	
+	public void parseTree() {
+		int size = size();
+		int i = 0;
+		while (i < size) {
+			Object v = vector.elementAt(i);
+			if (v instanceof JSONObject) {
+				((JSONObject) v).parseTree();
+			} else if (v instanceof JSONArray) {
+				((JSONArray) v).parseTree();
+			} else if (v instanceof JSONString) {
+				vector.setElementAt(v = JSON.parseJSON(v.toString()), i);
+			}
+		}
+	}
+	
 	public Vector getVector() {
+		parseTree();
 		return vector;
 	}
 

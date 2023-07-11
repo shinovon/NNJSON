@@ -354,13 +354,29 @@ public class JSONObject extends AbstractJSON {
 	public JSONArray keysAsArray() {
 		JSONArray array = new JSONArray();
 		Enumeration keys = table.keys();
-		while(keys.hasMoreElements()) {
+		while (keys.hasMoreElements()) {
 			array.add(keys.nextElement());
 		}
 		return array;
 	}
 	
+	public void parseTree() {
+		Enumeration keys = table.keys();
+		while (keys.hasMoreElements()) {
+			String k = (String) keys.nextElement();
+			Object v = table.get(k);
+			if (v instanceof JSONObject) {
+				((JSONObject) v).parseTree();
+			} else if (v instanceof JSONArray) {
+				((JSONArray) v).parseTree();
+			} else if (v instanceof JSONString) {
+				table.put(k, v = JSON.parseJSON(v.toString()));
+			}
+		}
+	}
+	
 	public Hashtable getTable() {
+		parseTree();
 		return table;
 	}
 
