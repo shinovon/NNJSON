@@ -429,6 +429,7 @@ public class JSONArray extends AbstractJSON {
 			} else if (v instanceof JSONString) {
 				vector.setElementAt(v = JSON.parseJSON(v.toString()), i);
 			}
+			i++;
 		}
 	}
 	
