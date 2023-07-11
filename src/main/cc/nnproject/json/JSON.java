@@ -28,7 +28,7 @@ import java.util.Vector;
  * JSON Library by nnproject.cc<br>
  * Usage:<p><code>JSONObject obj = JSON.getObject(str);</code>
  * @author Shinovon
- * @version 1.3
+ * @version 1.4
  */
 public final class JSON {
 
@@ -254,7 +254,7 @@ public final class JSON {
 	}
 	
 	public static boolean isNull(Object obj) {
-		return json_null.equals(obj);
+		return json_null.equals(obj) || obj == null;
 	}
 
 	public static String escape_utf8(String s) {

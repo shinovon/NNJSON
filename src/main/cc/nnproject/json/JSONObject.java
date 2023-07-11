@@ -46,6 +46,8 @@ public class JSONObject extends AbstractJSON {
 				Object o = table.get(name);
 				if (o instanceof JSONString)
 					table.put(name, o = JSON.parseJSON(o.toString()));
+				else if (o == JSON.json_null)
+					return null;
 				return o;
 			}
 		} catch (JSONException e) {
@@ -69,7 +71,7 @@ public class JSONObject extends AbstractJSON {
 	}
 	
 	public String getString(String name) throws JSONException {
-		return get(name).toString();
+		return String.valueOf(get(name));
 	}
 	
 	public String getString(String name, String def) {
@@ -78,7 +80,7 @@ public class JSONObject extends AbstractJSON {
 			if(o == null || o instanceof String) {
 				return (String) o;
 			}
-			return o.toString();
+			return String.valueOf(o);
 		} catch (Exception e) {
 			return def;
 		}
@@ -95,14 +97,18 @@ public class JSONObject extends AbstractJSON {
 			throw new JSONException("Not object: " + name);
 		}
 	}
+	public JSONObject getObject(String name, JSONObject def) {
+		if(has(name)) {
+			try {
+				return (JSONObject) get(name);
+			} catch (Exception e) {
+			}
+		}
+		return def;
+	}
 	
 	public JSONObject getNullableObject(String name) {
-		if(!has(name)) return null;
-		try {
-			return getObject(name);
-		} catch (Exception e) {
-			return null;
-		}
+		return getObject(name, null);
 	}
 	
 	public JSONArray getArray(String name) throws JSONException {
@@ -113,13 +119,19 @@ public class JSONObject extends AbstractJSON {
 		}
 	}
 	
-	public JSONArray getNullableArray(String name) {
-		if(!has(name)) return null;
-		try {
-			return getArray(name);
-		} catch (Exception e) {
-			return null;
+	public JSONArray getArray(String name, JSONArray def) throws JSONException {
+		if(has(name)) {
+			try {
+				return (JSONArray) get(name);
+			} catch (Exception e) {
+			}
 		}
+		return def;
+	}
+	
+	
+	public JSONArray getNullableArray(String name) {
+		return getArray(name, null);
 	}
 	
 	public int getInt(String name) throws JSONException {
@@ -346,6 +358,26 @@ public class JSONObject extends AbstractJSON {
 			array.add(keys.nextElement());
 		}
 		return array;
+	}
+	
+	public Hashtable getTable() {
+		return table;
+	}
+
+	public Hashtable copy() {
+		Hashtable copy = new Hashtable();
+		Enumeration keys = table.keys();
+		while (keys.hasMoreElements()) {
+			String k = (String) keys.nextElement();
+			Object v = table.get(k);
+			if (v instanceof JSONObject) {
+				v = ((JSONObject) v).copy();
+			} else if (v instanceof JSONArray) {
+				v = ((JSONArray) v).copy();
+			}
+			copy.put(k, v);
+		}
+		return copy;
 	}
 
 }

@@ -39,10 +39,11 @@ public class JSONArray extends AbstractJSON {
 	public Object get(int index) throws JSONException {
 		try {
 			if(index >= 0 && index < vector.size()) {
-				Object o = vector.elementAt(index);
-				if (o instanceof JSONString) {
+				Object o = JSON.getJSON(vector.elementAt(index));
+				if (o instanceof JSONString)
 					vector.setElementAt(o = JSON.parseJSON(o.toString()), index);
-				}
+				else if (o == JSON.json_null)
+					return null;
 				return o;
 			}
 		} catch (Exception e) {
@@ -63,15 +64,19 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public String getString(int index) throws JSONException {
-		return get(index).toString();
+		return String.valueOf(get(index));
 	}
 	
 	public String getString(int index, String def) {
 		try {
-			return get(index).toString();
+			return String.valueOf(get(index));
 		} catch (Exception e) {
 			return def;
 		}
+	}
+	
+	public String getNullableString(int index) {
+		return getString(index, null);
 	}
 	
 	public JSONObject getObject(int index) throws JSONException {
@@ -82,12 +87,16 @@ public class JSONArray extends AbstractJSON {
 		}
 	}
 	
-	public JSONObject getNullableObject(int index) {
+	public JSONObject getObject(int index, JSONObject def) {
 		try {
 			return getObject(index);
 		} catch (Exception e) {
-			return null;
 		}
+		return def;
+	}
+	
+	public JSONObject getNullableObject(int index) {
+		return getObject(index, null);
 	}
 	
 	public JSONArray getArray(int index) throws JSONException {
@@ -98,12 +107,16 @@ public class JSONArray extends AbstractJSON {
 		}
 	}
 	
-	public JSONArray getNullableArray(int index) {
+	public JSONArray getArray(int index, JSONArray def) {
 		try {
 			return getArray(index);
 		} catch (Exception e) {
-			return null;
 		}
+		return def;
+	}
+	
+	public JSONArray getNullableArray(int index) {
+		return getArray(index, null);
 	}
 	
 	public int getInt(int index) throws JSONException {
@@ -177,15 +190,15 @@ public class JSONArray extends AbstractJSON {
 	}
 
 	public void add(double d) {
-		vector.addElement(Double.toString(d));
+		vector.addElement(new Double(d));
 	}
 	
 	public void add(int i) {
-		vector.addElement(Integer.toString(i));
+		vector.addElement(new Integer(i));
 	}
 
 	public void add(long l) {
-		vector.addElement(Long.toString(l));
+		vector.addElement(new Long(l));
 	}
 	
 	public void add(Object obj) {
@@ -201,15 +214,15 @@ public class JSONArray extends AbstractJSON {
 	}
 
 	public void set(int idx, double d) {
-		vector.setElementAt(Double.toString(d), idx);
+		vector.setElementAt(new Double(d), idx);
 	}
 	
 	public void set(int idx, int i) {
-		vector.setElementAt(Integer.toString(i), idx);
+		vector.setElementAt(new Integer(i), idx);
 	}
 
 	public void set(int idx, long l) {
-		vector.setElementAt(Long.toString(l), idx);
+		vector.setElementAt(new Long(l), idx);
 	}
 	
 	public void set(int idx, Object obj) {
@@ -225,15 +238,15 @@ public class JSONArray extends AbstractJSON {
 	}
 
 	public void put(int idx, double d) {
-		vector.insertElementAt(Double.toString(d), idx);
+		vector.insertElementAt(new Double(d), idx);
 	}
 	
 	public void put(int idx, int i) {
-		vector.insertElementAt(Integer.toString(i), idx);
+		vector.insertElementAt(new Integer(i), idx);
 	}
 
 	public void put(int idx, long l) {
-		vector.insertElementAt(Long.toString(l), idx);
+		vector.insertElementAt(new Long(l), idx);
 	}
 	
 	public void put(int idx, Object obj) {
@@ -376,10 +389,55 @@ public class JSONArray extends AbstractJSON {
 		int i = offset;
 		int j = 0;
 		while(i < arr.length && j < length && j < size()) {
-			Object o = get(j++);
-			if(o == JSON.json_null) o = null;
-			arr[i++] = o;
+			arr[i++] = get(j++);
 		}
+	}
+	
+	public boolean has(String s) {
+		return vector.contains(s);
+	}
+	
+	public boolean has(boolean b) {
+		return vector.contains(new Boolean(b));
+	}
+
+	public boolean has(double d) {
+		return vector.contains(new Double(d));
+	}
+	
+	public boolean has(int i) {
+		return vector.contains(new Integer(i));
+	}
+
+	public boolean has(long l) {
+		return vector.contains(new Long(l));
+	}
+	
+	public boolean has(Object o) {
+		return vector.contains(JSON.getJSON(o));
+	}
+	
+	public Vector getVector() {
+		return vector;
+	}
+
+	public Vector copy() {
+		Vector copy = new Vector();
+		int size = size();
+		if (size == 0)
+			return copy;
+		int i = 0;
+		while (i < size) {
+			Object v = get(i);
+			if (v instanceof JSONObject) {
+				v = ((JSONObject) v).copy();
+			} else if (v instanceof JSONArray) {
+				v = ((JSONArray) v).copy();
+			}
+			copy.addElement(v);
+			i++;
+		}
+		return copy;
 	}
 
 }
