@@ -25,19 +25,19 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 /**
- * JSON Library by nnproject.cc<br>
+ * JSON Library compatible with CLDC 1.1 & JDK 1.1<br>
  * Usage:<p><code>JSONObject obj = JSON.getObject(str);</code>
  * @author Shinovon
- * @version 1.5
+ * @version 2.0
  */
 public final class JSON {
 
 	/**
 	 * Parse all members once
 	 */
-	public final static boolean parse_members = false;
+	public static final boolean parse_members = false;
 	
-	public final static Object json_null = new Object();
+	public static final Object json_null = new Object();
 
 	public static final String FORMAT_TAB = "  ";
 	
@@ -63,17 +63,18 @@ public final class JSON {
 	static Object getJSON(Object obj) throws JSONException {
 		if (obj instanceof Hashtable) {
 			return new JSONObject((Hashtable) obj);
-		} else if (obj instanceof Vector) {
-			return new JSONArray((Vector) obj);
-		} else if (obj == null) {
-			return json_null;
-		} else {
-			return obj;
 		}
+		if (obj instanceof Vector) {
+			return new JSONArray((Vector) obj);
+		}
+		if (obj == null) {
+			return json_null;
+		}
+		return obj;
 	}
 
 	static Object parseJSON(String str) throws JSONException {
-		if(str == null || (str = str.trim()).length() == 0) {
+		if (str == null || (str = str.trim()).length() == 0) {
 			throw new JSONException("Empty string");
 		}
 		char first = str.charAt(0);
@@ -98,7 +99,7 @@ public final class JSON {
 						case '\\': {
 							next: {
 								replaced: {
-									if(l < i + 1) {
+									if (l < i + 1) {
 										sb.append(c);
 										break loop;
 									}
@@ -170,7 +171,7 @@ public final class JSON {
 				return TRUE;
 			if (str.equals("false"))
 				return FALSE;
-			if(str.length() > 2 && str.charAt(0) == '0' && str.charAt(1) == 'x') {
+			if (str.length() > 2 && str.charAt(0) == '0' && str.charAt(1) == 'x') {
 				try {
 					return new Integer(Integer.parseInt(str.substring(2), 16));
 				} catch (Exception e) {
@@ -254,7 +255,7 @@ public final class JSON {
 	}
 	
 	public static boolean isNull(Object obj) {
-		return json_null.equals(obj) || obj == null;
+		return obj == json_null || obj == null;
 	}
 
 	public static String escape_utf8(String s) {
@@ -300,7 +301,7 @@ public final class JSON {
 	}
 
 	public static double getDouble(Object o) throws JSONException {
-		if(isNull(o)) throw new JSONException("Null to number cast");
+		if (isNull(o)) throw new JSONException("null");
 		try {
 			if (o instanceof Integer)
 				return ((Integer) o).intValue();
@@ -314,7 +315,7 @@ public final class JSON {
 	}
 
 	public static long getLong(Object o) throws JSONException {
-		if(isNull(o)) throw new JSONException("Null to number cast");
+		if (isNull(o)) throw new JSONException("null");
 		try {
 			if (o instanceof Integer)
 				return ((Integer) o).longValue();

@@ -25,28 +25,34 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 public class JSONArray extends AbstractJSON {
-
-	private Vector vector;
-	private boolean parsed;
-
+	
+	protected Object[] elements;
+	protected int count;
+	
 	public JSONArray() {
-		this.vector = new Vector();
+		elements = new Object[10];
+	}
+	
+	public JSONArray(int size) {
+		elements = new Object[size];
 	}
 
 	public JSONArray(Vector vector) {
-		this.vector = vector;
+		elements = new Object[count = vector.size()];
+		vector.copyInto(elements);
 	}
-	
+
 	public Object get(int index) throws JSONException {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
 		try {
-			if(index >= 0 && index < vector.size()) {
-				Object o = JSON.getJSON(vector.elementAt(index));
-				if (o instanceof JSONString)
-					vector.setElementAt(o = JSON.parseJSON(o.toString()), index);
-				else if (o == JSON.json_null)
-					return null;
-				return o;
-			}
+			Object o = elements[index];
+			if (o instanceof JSONString)
+				o = elements[index] = JSON.parseJSON(o.toString());
+			if (o == JSON.json_null)
+				return null;
+			return o;
 		} catch (Exception e) {
 		}
 		throw new JSONException("No value at " + index);
@@ -158,14 +164,14 @@ public class JSONArray extends AbstractJSON {
 	
 	public boolean getBoolean(int index) throws JSONException {
 		Object o = get(index);
-		if(o == JSON.TRUE) return true;
-		if(o == JSON.FALSE) return false;
-		if(o instanceof Boolean) return ((Boolean) o).booleanValue();
-		if(o instanceof String) {
+		if (o == JSON.TRUE) return true;
+		if (o == JSON.FALSE) return false;
+		if (o instanceof Boolean) return ((Boolean) o).booleanValue();
+		if (o instanceof String) {
 			String s = (String) o;
 			s = s.toLowerCase();
-			if(s.equals("true")) return true;
-			if(s.equals("false")) return false;
+			if (s.equals("true")) return true;
+			if (s.equals("false")) return false;
 		}
 		throw new JSONException("Not boolean: " + o + " (" + index + ")");
 	}
@@ -179,91 +185,144 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public boolean isNull(int index) {
-		return JSON.isNull(get(index));
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		return elements[index] == JSON.json_null;
 	}
 	
-	public void add(String s) {
-		vector.addElement(JSON.getJSON(s));
-	}
-
-	public void add(boolean b) {
-		vector.addElement(new Boolean(b));
-	}
-
-	public void add(double d) {
-		vector.addElement(new Double(d));
+	public void add(Object object) {
+		addElement(JSON.getJSON(object));
 	}
 	
 	public void add(int i) {
-		vector.addElement(new Integer(i));
+		addElement(new Integer(i));
 	}
 
 	public void add(long l) {
-		vector.addElement(new Long(l));
-	}
-	
-	public void add(Object obj) {
-		vector.addElement(JSON.getJSON(obj));
-	}
-	
-	public void set(int idx, String s) {
-		vector.setElementAt(JSON.getJSON(s), idx);
+		addElement(new Long(l));
 	}
 
-	public void set(int idx, boolean b) {
-		vector.setElementAt(new Boolean(b), idx);
+	public void add(double d) {
+		addElement(new Double(d));
+	}
+	
+	public void add(boolean b) {
+		addElement(new Boolean(b));
+	}
+	
+	public void set(int index, Object object) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = JSON.getJSON(object);
+	}
+	
+	public void set(int index, int i) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = new Integer(i);
 	}
 
-	public void set(int idx, double d) {
-		vector.setElementAt(new Double(d), idx);
-	}
-	
-	public void set(int idx, int i) {
-		vector.setElementAt(new Integer(i), idx);
-	}
-
-	public void set(int idx, long l) {
-		vector.setElementAt(new Long(l), idx);
-	}
-	
-	public void set(int idx, Object obj) {
-		vector.setElementAt(JSON.getJSON(obj), idx);
-	}
-	
-	public void put(int idx, String s) {
-		vector.insertElementAt(JSON.getJSON(s), idx);
+	public void set(int index, long l) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = new Long(l);
 	}
 
-	public void put(int idx, boolean b) {
-		vector.insertElementAt(new Boolean(b), idx);
+	public void set(int index, double d) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = new Double(d);
+	}
+	
+	public void set(int index, boolean b) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = new Boolean(b);
+	}
+	
+	public void put(int index, Object object) {
+		insertElementAt(JSON.getJSON(object), index);
+	}
+	
+	public void put(int index, int i) {
+		insertElementAt(new Integer(i), index);
 	}
 
-	public void put(int idx, double d) {
-		vector.insertElementAt(new Double(d), idx);
-	}
-	
-	public void put(int idx, int i) {
-		vector.insertElementAt(new Integer(i), idx);
+	public void put(int index, long l) {
+		insertElementAt(new Long(l), index);
 	}
 
-	public void put(int idx, long l) {
-		vector.insertElementAt(new Long(l), idx);
+	public void put(int index, double d) {
+		insertElementAt(new Double(d), index);
+	}
+
+	public void put(int index, boolean b) {
+		insertElementAt(new Boolean(b), index);
 	}
 	
-	public void put(int idx, Object obj) {
-		vector.insertElementAt(JSON.getJSON(obj), idx);
+	public boolean has(Object object) {
+		return _indexOf(JSON.getJSON(object), 0) != -1;
 	}
 	
-	public void remove(int idx) {
-		vector.removeElementAt(idx);
+	public boolean has(int i) {
+		return _indexOf(new Integer(i), 0) != -1;
+	}
+
+	public boolean has(long l) {
+		return _indexOf(new Long(l), 0) != -1;
+	}
+
+	public boolean has(double d) {
+		return _indexOf(new Double(d), 0) != -1;
+	}
+	
+	public boolean has(boolean b) {
+		return _indexOf(new Boolean(b), 0) != -1;
+	}
+	
+	public int indexOf(Object object) {
+		return _indexOf(JSON.getJSON(object), 0);
+	}
+	
+	public int indexOf(Object object, int index) {
+		return _indexOf(JSON.getJSON(object), index);
 	}
 	
 	public void clear() {
-		vector.removeAllElements();
+		for (int i = 0; i < count; i++) elements[i] = null;
+		count = 0;
+	}
+	
+	public boolean remove(Object object) {
+		int i = _indexOf(JSON.getJSON(object), 0);
+		if (i == -1) return false;
+		remove(i);
+		return true;
+	}
+	
+	public void remove(int index) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		count--;
+		int size = count - index;
+		if (size > 0)
+			System.arraycopy(elements, index + 1, elements, index, size);
+		elements[count] = null;
 	}
 	
 	public int size() {
-		return vector.size();
+		return count;
+	}
+	
+	public boolean isEmpty() {
+		return count == 0;
 	}
 	
 	public String toString() {
@@ -271,53 +330,53 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public boolean equals(Object obj) {
-		if(this == obj || super.equals(obj)) {
+		if (this == obj || super.equals(obj)) {
 			return true;
 		}
 		return similar(obj);
 	}
 	
 	public boolean similar(Object obj) {
-        if(!(obj instanceof JSONArray)) {
-            return false;
-        }
-        int size = size();
-        if(size != ((JSONArray)obj).size()) {
-        	return false;
-        }
-        for(int i = 0; i < size; i++) {
-        	Object a = get(i);
-        	Object b = ((JSONArray)obj).get(i);
-        	if(a == b) {
-        		continue;
-        	}
-        	if(a == null) {
-        		return false;
-        	}
-        	if(a instanceof AbstractJSON) {
-        		if (!((AbstractJSON)a).similar(b)) {
-        			return false;
-        		}
-        	} else if(!a.equals(b)) {
-        		return false;
-        	}
-        }
-        return true;
+		if (!(obj instanceof JSONArray)) {
+			return false;
+		}
+		int size = count;
+		if (size != ((JSONArray)obj).count) {
+			return false;
+		}
+		for (int i = 0; i < size; i++) {
+			Object a = get(i);
+			Object b = ((JSONArray)obj).get(i);
+			if (a == b) {
+				continue;
+			}
+			if (a == null) {
+				return false;
+			}
+			if (a instanceof AbstractJSON) {
+				if (!((AbstractJSON)a).similar(b)) {
+					return false;
+				}
+			} else if (!a.equals(b)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public String build() {
-		int size = size();
+		int size = count;
 		if (size == 0)
 			return "[]";
 		StringBuffer s = new StringBuffer("[");
 		int i = 0;
 		while (i < size) {
-			Object v = vector.elementAt(i);
+			Object v = elements[i];
 			if (v instanceof AbstractJSON) {
 				s.append(((AbstractJSON) v).build());
 			} else if (v instanceof String) {
 				s.append("\"").append(JSON.escape_utf8((String) v)).append("\"");
-			} else if(JSON.json_null.equals(v)) {
+			} else if (v == JSON.json_null) {
 				s.append((String) null);
 			} else {
 				s.append(String.valueOf(v));
@@ -332,7 +391,7 @@ public class JSONArray extends AbstractJSON {
 	}
 
 	protected String format(int l) {
-		int size = size();
+		int size = count;
 		if (size == 0)
 			return "[]";
 		String t = "";
@@ -342,23 +401,23 @@ public class JSONArray extends AbstractJSON {
 		String t2 = t.concat(JSON.FORMAT_TAB);
 		StringBuffer s = new StringBuffer("[\n");
 		s.append(t2);
-		for (int i = 0; i < size; ) {
-			Object v = null;
-			try {
-				v = get(i);
-			} catch (JSONException e) {
+		int i = 0;
+		while (i < size) {
+			Object v = elements[i];
+			if (v instanceof JSONString) {
+				v = elements[i] = JSON.parseJSON(v.toString());
 			}
 			if (v instanceof AbstractJSON) {
 				s.append(((AbstractJSON) v).format(l + 1));
 			} else if (v instanceof String) {
 				s.append("\"").append(JSON.escape_utf8((String) v)).append("\"");
-			} else if(v == JSON.json_null) {
+			} else if (v == JSON.json_null) {
 				s.append((String) null);
 			} else {
 				s.append(v);
 			}
 			i++;
-			if (i < size()) {
+			if (i < size) {
 				s.append(",\n").append(t2);
 			}
 		}
@@ -373,19 +432,25 @@ public class JSONArray extends AbstractJSON {
 	public Enumeration elements() {
 		return new Enumeration() {
 			int i = 0;
+			
 			public boolean hasMoreElements() {
-				return i < vector.size();
+				return i < count;
 			}
+			
 			public Object nextElement() {
-				try {
-					return get(i++);
-				} catch (Exception e) {
-					return null;
-				}
+				Object o = elements[i];
+				if (o instanceof JSONString)
+					o = elements[i] = JSON.parseJSON(o.toString());
+				i++;
+				return o == JSON.json_null ? null : o;
 			}
 		};
 	}
 	
+	public void copyInto(Object[] arr) {
+		copyInto(arr, 0, arr.length);
+	}
+
 	public void copyInto(Object[] arr, int offset, int length) {
 		int i = offset;
 		int j = 0;
@@ -393,71 +458,55 @@ public class JSONArray extends AbstractJSON {
 			arr[i++] = get(j++);
 		}
 	}
-	
-	public boolean has(String s) {
-		return vector.contains(s);
-	}
-	
-	public boolean has(boolean b) {
-		return vector.contains(new Boolean(b));
-	}
 
-	public boolean has(double d) {
-		return vector.contains(new Double(d));
-	}
-	
-	public boolean has(int i) {
-		return vector.contains(new Integer(i));
-	}
-
-	public boolean has(long l) {
-		return vector.contains(new Long(l));
-	}
-	
-	public boolean has(Object o) {
-		return vector.contains(JSON.getJSON(o));
-	}
-	
-	public void parseTree() {
-		if(parsed) return;
-		parsed = true;
-		int size = size();
-		int i = 0;
-		while (i < size) {
-			Object v = vector.elementAt(i);
-			if (v instanceof JSONObject) {
-				((JSONObject) v).parseTree();
-			} else if (v instanceof JSONArray) {
-				((JSONArray) v).parseTree();
-			} else if (v instanceof JSONString) {
-				vector.setElementAt(v = JSON.parseJSON(v.toString()), i);
+	public Vector toVector() {
+		int size = count;
+		Vector copy = new Vector(size);
+		for (int i = 0; i < size; i++) {
+			Object o = elements[i];
+			if (o instanceof JSONString) {
+				o = elements[i] = JSON.parseJSON(o.toString());
 			}
-			i++;
-		}
-	}
-	
-	public Vector getVector() {
-		parseTree();
-		return vector;
-	}
-
-	public Vector copy() {
-		Vector copy = new Vector();
-		int size = size();
-		if (size == 0)
-			return copy;
-		int i = 0;
-		while (i < size) {
-			Object v = get(i);
-			if (v instanceof JSONObject) {
-				v = ((JSONObject) v).copy();
-			} else if (v instanceof JSONArray) {
-				v = ((JSONArray) v).copy();
+			if (o instanceof JSONObject) {
+				o = ((JSONObject) o).toTable();
+			} else if (o instanceof JSONArray) {
+				o = ((JSONArray) o).toVector();
 			}
-			copy.addElement(v);
-			i++;
+			copy.addElement(o);
 		}
 		return copy;
+	}
+
+	private void addElement(Object object) {
+		if (object == this) throw new JSONException();
+		if (count == elements.length) grow();
+		elements[count++] = object;
+	}
+	
+	private void insertElementAt(Object object, int index) {
+		if (object == this) throw new JSONException();
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		if (count == elements.length) grow();
+		int size = count - index;
+		if (size > 0)
+			System.arraycopy(elements, index, elements, index + 1, size);
+		elements[index] = object;
+		size++;
+	}
+	
+	private int _indexOf(Object object, int start) {
+		for (int i = 0; i < count; i++) {
+			if (object.equals(elements[i])) return i;
+		}
+		return -1;
+	}
+	
+	private void grow() {
+		Object[] tmp = new Object[elements.length + 1];
+		System.arraycopy(elements, 0, tmp, 0, count);
+		elements = tmp;
 	}
 
 }
