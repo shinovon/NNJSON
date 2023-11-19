@@ -24,13 +24,19 @@ package cc.nnproject.json;
 public abstract class AbstractJSON {
 	
 	public abstract void clear();
+	
 	public abstract int size();
+	
 	public abstract String toString();
+	
 	public abstract String build();
+	
 	public final String format() {
 		return format(0);
 	}
+	
 	protected abstract String format(int l);
+	
 	public abstract boolean similar(Object obj);
 
 }
