@@ -498,6 +498,7 @@ public class JSONArray extends AbstractJSON {
 	
 	private int _indexOf(Object object, int start) {
 		for (int i = 0; i < count; i++) {
+			if(elements[i] instanceof JSONString) elements[i] = JSON.parseJSON(elements[i].toString());
 			if (object.equals(elements[i])) return i;
 		}
 		return -1;
