@@ -23,10 +23,10 @@ package cc.nnproject.json;
 
 public class JSONException extends RuntimeException {
 	
-	JSONException() {
+	public JSONException() {
 	}
 	
-	JSONException(String string) {
+	public JSONException(String string) {
 		super(string);
 	}
 	
