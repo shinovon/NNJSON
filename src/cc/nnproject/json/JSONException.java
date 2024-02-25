@@ -26,8 +26,8 @@ public class JSONException extends RuntimeException {
 	public JSONException() {
 	}
 	
-	public JSONException(String string) {
-		super(string);
+	public JSONException(String msg) {
+		super(msg);
 	}
 	
 	public String toString() {

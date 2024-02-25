@@ -23,6 +23,8 @@ package cc.nnproject.json;
 
 public abstract class AbstractJSON {
 	
+	// common methods for both JSONObject and JSONArray
+
 	public abstract void clear();
 	
 	public abstract int size();

@@ -70,6 +70,8 @@ public class JSONArray extends AbstractJSON {
 		throw new JSONException("No value at " + index);
 	}
 	
+	// unused methods should be removed by proguard shrinking
+	
 	public Object get(int index, Object def) {
 		try {
 			return get(index);
@@ -83,12 +85,18 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public String getString(int index) throws JSONException {
-		return String.valueOf(get(index));
+		Object o = get(index);
+		if (o == null || o instanceof String)
+			return (String) o;
+		return String.valueOf(o);
 	}
 	
 	public String getString(int index, String def) {
 		try {
-			return String.valueOf(get(index));
+			Object o = get(index);
+			if (o == null || o instanceof String)
+				return (String) o;
+			return String.valueOf(o);
 		} catch (Exception e) {
 			return def;
 		}
@@ -210,6 +218,14 @@ public class JSONArray extends AbstractJSON {
 		addElement(JSON.getJSON(object));
 	}
 	
+	public void add(AbstractJSON json) {
+		addElement(json);
+	}
+	
+	public void add(String s) {
+		addElement(s);
+	}
+	
 	public void add(int i) {
 		addElement(new Integer(i));
 	}
@@ -225,10 +241,6 @@ public class JSONArray extends AbstractJSON {
 	public void add(boolean b) {
 		addElement(new Boolean(b));
 	}
-	
-	public void add(AbstractJSON json) {
-		addElement(json);
-	}
 
 	/**
 	 * @deprecated
@@ -238,6 +250,20 @@ public class JSONArray extends AbstractJSON {
 			throw new JSONException("Index out of bounds: " + index);
 		}
 		elements[index] = JSON.getJSON(object);
+	}
+	
+	public void set(int index, AbstractJSON json) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = json;
+	}
+	
+	public void set(int index, String s) {
+		if (index < 0 || index >= count) {
+			throw new JSONException("Index out of bounds: " + index);
+		}
+		elements[index] = s;
 	}
 	
 	public void set(int index, int i) {
@@ -268,18 +294,19 @@ public class JSONArray extends AbstractJSON {
 		elements[index] = new Boolean(b);
 	}
 	
-	public void set(int index, AbstractJSON json) {
-		if (index < 0 || index >= count) {
-			throw new JSONException("Index out of bounds: " + index);
-		}
-		elements[index] = JSON.getJSON(json);
-	}
-	
 	/**
 	 * @deprecated
 	 */
 	public void put(int index, Object object) {
 		insertElementAt(JSON.getJSON(object), index);
+	}
+	
+	public void put(int index, AbstractJSON json) {
+		insertElementAt(json, index);
+	}
+	
+	public void put(int index, String s) {
+		insertElementAt(s, index);
 	}
 	
 	public void put(int index, int i) {
@@ -296,10 +323,6 @@ public class JSONArray extends AbstractJSON {
 
 	public void put(int index, boolean b) {
 		insertElementAt(new Boolean(b), index);
-	}
-	
-	public void put(int index, AbstractJSON json) {
-		insertElementAt(json, index);
 	}
 	
 	public boolean has(Object object) {
@@ -325,7 +348,7 @@ public class JSONArray extends AbstractJSON {
 	public int indexOf(Object object) {
 		return _indexOf(JSON.getJSON(object), 0);
 	}
-	
+
 	public int indexOf(Object object, int index) {
 		return _indexOf(JSON.getJSON(object), index);
 	}
@@ -366,10 +389,7 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public boolean equals(Object obj) {
-		if (this == obj || super.equals(obj)) {
-			return true;
-		}
-		return similar(obj);
+		return this == obj || super.equals(obj) || similar(obj);
 	}
 	
 	public boolean similar(Object obj) {
@@ -532,15 +552,16 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	private int _indexOf(Object object, int start) {
-		for (int i = 0; i < count; i++) {
-			if(elements[i] instanceof JSONString) elements[i] = JSON.parseJSON(((JSONString) elements[i]).str);
+		for (int i = start; i < count; i++) {
+			if (elements[i] instanceof JSONString)
+				elements[i] = JSON.parseJSON(((JSONString) elements[i]).str);
 			if (object.equals(elements[i])) return i;
 		}
 		return -1;
 	}
 	
 	private void grow() {
-		Object[] tmp = new Object[elements.length + 1];
+		Object[] tmp = new Object[elements.length + 1]; // TODO: expand by multiplying?
 		System.arraycopy(elements, 0, tmp, 0, count);
 		elements = tmp;
 	}

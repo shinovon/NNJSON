@@ -33,13 +33,13 @@ import java.util.Vector;
  */
 public final class JSON {
 
-	/**
-	 * Parse all members once
-	 */
+	// parse all nested elements once
 	static final boolean parse_members = false;
 	
+	// identation for formatting
 	static final String FORMAT_TAB = "  ";
 	
+	// used for storing nulls, get methods must return real null
 	public static final Object json_null = new Object();
 	
 	public static final Boolean TRUE = new Boolean(true);
@@ -88,15 +88,15 @@ public final class JSON {
 		int length = str.length() - 1;
 		char last = str.charAt(length);
 		switch(first) {
-		case '"': { // String
-			if(last != '"')
+		case '"': { // string
+			if (last != '"')
 				throw new JSONException("Unexpected end of text");
 			char[] chars = str.substring(1, length).toCharArray();
 			str = null;
 			int l = chars.length;
 			StringBuffer sb = new StringBuffer();
 			int i = 0;
-			// Parse string escape chars
+			// parse escaped chars in string
 			loop: {
 				while (i < l) {
 					char c = chars[i];
@@ -171,10 +171,10 @@ public final class JSON {
 		}
 		case '{': // JSON object or array
 		case '[': {
-			if (last != '}' && last != ']')
+			boolean object = first == '{';
+			if (object ? last != '}' : last != ']')
 				throw new JSONException("Unexpected end of text");
 			int brackets = 0;
-			boolean object = first == '{';
 			int i = 1;
 			char nextDelimiter = object ? ':' : ',';
 			boolean escape = false;
@@ -206,6 +206,7 @@ public final class JSON {
 					}
 				}
 
+				// fail if unclosed quotes or brackets left
 				if (quote || brackets > 0) {
 					throw new JSONException("Corrupted JSON");
 				}
@@ -216,7 +217,11 @@ public final class JSON {
 					nextDelimiter = ',';
 				} else {
 					Object value = str.substring(i, splIndex).trim();
-					value = parse_members ? parseJSON((String) value) : new JSONString((String) value);
+					// don't check length because if value is empty, then exception is going to be thrown anyway
+					char c = ((String) value).charAt(0);
+					// leave JSONString as value to parse it later, if its object or array and nested parsing is disabled
+					value = parse_members || (c != '{' && c != '[') ?
+							parseJSON((String) value) : new JSONString((String) value);
 					if (object) {
 						((JSONObject) res)._put(key, value);
 						key = null;
@@ -234,14 +239,16 @@ public final class JSON {
 			return TRUE;
 		case 'f': // false
 			return FALSE;
-		default: // Number
+		default: // number
 			if ((first >= '0' && first <= '9') || first == '-') {
 				try {
-					if (length > 2 && first == '0' && str.charAt(1) == 'x') {
+					// hex
+					if (length > 1 && first == '0' && str.charAt(1) == 'x') {
 						if (length > 9) // str.length() > 10
 							return new Long(Long.parseLong(str.substring(2), 16));
 						return new Integer(Integer.parseInt(str.substring(2), 16));
 					}
+					// decimal
 					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || "-0".equals(str))
 						return new Double(Double.parseDouble(str));
 					if (first == '-') length--;
@@ -259,6 +266,7 @@ public final class JSON {
 		return obj == json_null || obj == null;
 	}
 
+	// transforms string for exporting
 	static String escape_utf8(String s) {
 		int len = s.length();
 		StringBuffer sb = new StringBuffer();
