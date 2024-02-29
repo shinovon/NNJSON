@@ -215,10 +215,12 @@ public class JSONArray extends AbstractJSON {
 	 * @deprecated
 	 */
 	public void add(Object object) {
+		if (object == this) throw new JSONException();
 		addElement(JSON.getJSON(object));
 	}
 	
 	public void add(AbstractJSON json) {
+		if (json == this) throw new JSONException();
 		addElement(json);
 	}
 	
@@ -246,6 +248,7 @@ public class JSONArray extends AbstractJSON {
 	 * @deprecated
 	 */
 	public void set(int index, Object object) {
+		if (object == this) throw new JSONException();
 		if (index < 0 || index >= count) {
 			throw new JSONException("Index out of bounds: " + index);
 		}
@@ -253,6 +256,7 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	public void set(int index, AbstractJSON json) {
+		if (json == this) throw new JSONException();
 		if (index < 0 || index >= count) {
 			throw new JSONException("Index out of bounds: " + index);
 		}
@@ -298,10 +302,12 @@ public class JSONArray extends AbstractJSON {
 	 * @deprecated
 	 */
 	public void put(int index, Object object) {
+		if (object == this) throw new JSONException();
 		insertElementAt(JSON.getJSON(object), index);
 	}
 	
 	public void put(int index, AbstractJSON json) {
+		if (json == this) throw new JSONException();
 		insertElementAt(json, index);
 	}
 	
@@ -533,13 +539,11 @@ public class JSONArray extends AbstractJSON {
 	}
 
 	void addElement(Object object) {
-		if (object == this) throw new JSONException();
 		if (count == elements.length) grow();
 		elements[count++] = object;
 	}
 	
 	private void insertElementAt(Object object, int index) {
-		if (object == this) throw new JSONException();
 		if (index < 0 || index > count) {
 			throw new JSONException("Index out of bounds: " + index);
 		}
@@ -561,7 +565,7 @@ public class JSONArray extends AbstractJSON {
 	}
 	
 	private void grow() {
-		Object[] tmp = new Object[elements.length + 1]; // TODO: expand by multiplying?
+		Object[] tmp = new Object[elements.length * 2];
 		System.arraycopy(elements, 0, tmp, 0, count);
 		elements = tmp;
 	}
