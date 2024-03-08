@@ -217,6 +217,8 @@ public final class JSON {
 					nextDelimiter = ',';
 				} else {
 					Object value = str.substring(i, splIndex).trim();
+					// check if value is empty
+					if(((String) value).length() == 0) continue;
 					// don't check length because if value is empty, then exception is going to be thrown anyway
 					char c = ((String) value).charAt(0);
 					// leave JSONString as value to parse it later, if its object or array and nested parsing is disabled
