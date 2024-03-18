@@ -168,8 +168,9 @@ public final class JSON {
 				}
 				str = sb.toString();
 				sb = null;
+				return str;
 			}
-			return str;
+			return str.substring(1, length);
 		}
 		case '{': // JSON object or array
 		case '[': {
