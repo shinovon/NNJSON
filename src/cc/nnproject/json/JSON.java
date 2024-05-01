@@ -51,7 +51,7 @@ public final class JSON {
 		char c = text.charAt(0);
 		if (c != '{' && c != '[')
 			throw new JSONException("Not JSON object or array");
-		return (AbstractJSON) parseJSON(text);
+		return (AbstractJSON) parseJSON(text.trim());
 	}
 
 	public static JSONObject getObject(String text) throws JSONException {
@@ -59,7 +59,7 @@ public final class JSON {
 			throw new JSONException("Empty text");
 		if (text.charAt(0) != '{')
 			throw new JSONException("Not JSON object");
-		return (JSONObject) parseJSON(text);
+		return (JSONObject) parseJSON(text.trim());
 	}
 
 	public static JSONArray getArray(String text) throws JSONException {
@@ -67,7 +67,7 @@ public final class JSON {
 			throw new JSONException("Empty text");
 		if (text.charAt(0) != '[')
 			throw new JSONException("Not JSON array");
-		return (JSONArray) parseJSON(text);
+		return (JSONArray) parseJSON(text.trim());
 	}
 
 	static Object getJSON(Object obj) throws JSONException {
