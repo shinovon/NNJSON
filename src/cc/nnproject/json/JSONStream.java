@@ -43,13 +43,10 @@ public class JSONStream {
 	private JSONStream() {}
 	
 	private void init(InputStream in) throws IOException {
-		if(buffer) {
+		if (buffer) {
 			in = new BufferedInputStream(in);
 		}
 		reader = new InputStreamReader(in, "UTF-8");
-//		if(buffer) {
-//			reader = new BufferedReader(reader);
-//		}
 	}
 	
 	// Static functions
@@ -58,7 +55,7 @@ public class JSONStream {
 		JSONStream json = new JSONStream();
 		json.init(in);
 		char c = json.nextTrim();
-		if(c != '{' && c != '[')
+		if (c != '{' && c != '[')
 			throw new JSONException("getStream: Not json");
 		json.isObject = c == '{';
 		json.usePrev = true;
@@ -69,7 +66,7 @@ public class JSONStream {
 		JSONStream json = new JSONStream();
 		json.reader = r;
 		char c = json.nextTrim();
-		if(c != '{' && c != '[')
+		if (c != '{' && c != '[')
 			throw new JSONException("getStream: Not json");
 		json.isObject = c == '{';
 		json.usePrev = true;
@@ -77,16 +74,13 @@ public class JSONStream {
 	}
 	
 	public static AbstractJSON getJSON(InputStream in) throws IOException {
-		if(buffer) {
-			in = new BufferedInputStream(in);
-		}
 		JSONStream json = new JSONStream();
 		try {
 			json.init(in);
 			char c = json.nextTrim();
-			if(c != '[' && c != '{')
+			if (c != '[' && c != '{')
 				throw new JSONException("getFullJSON: Not json");
-			if(c == '{')
+			if (c == '{')
 				return json.nextObject(false);
 			else 
 				return json.nextArray(false);
@@ -96,14 +90,11 @@ public class JSONStream {
 	}
 	
 	public static JSONObject getObject(InputStream in) throws IOException {
-		if(buffer) {
-			in = new BufferedInputStream(in);
-		}
 		JSONStream json = new JSONStream();
 		try {
 			json.init(in);
 			char c = json.nextTrim();
-			if(c != '{') throw new JSONException("getFullObject: not object");
+			if (c != '{') throw new JSONException("getFullObject: not object");
 			return json.nextObject(false);
 		} finally {
 			json.close();
@@ -111,14 +102,11 @@ public class JSONStream {
 	}
 	
 	public static JSONArray getArray(InputStream in) throws IOException {
-		if(buffer) {
-			in = new BufferedInputStream(in);
-		}
 		JSONStream json = new JSONStream();
 		try {
 			json.init(in);
 			char c = json.nextTrim();
-			if(c != '[') throw new JSONException("getFullArray: not array");
+			if (c != '[') throw new JSONException("getFullArray: not array");
 			return json.nextArray(false);
 		} finally {
 			json.close();
@@ -165,7 +153,7 @@ public class JSONStream {
 	
 	public Object nextNumber() throws IOException {
 		Object v = nextValue(true);
-		if(v instanceof String)
+		if (v instanceof String)
 			throw new JSONException("nextNumber: not number: ".concat(String.valueOf(v)));
 		return v;
 	}
@@ -183,13 +171,13 @@ public class JSONStream {
 	// Jumps to key in object
 	// Result is found
 	public boolean jumpToKey(String key) throws IOException {
-		if(!isObject)
+		if (!isObject)
 			throw new JSONException("jumpToKey: not object");
-		while(true) {
-			if(nextString(true).equals(key)) {
+		while (true) {
+			if (nextString(true).equals(key)) {
 				return true;
 			}
-			if(nextTrim() != ':')
+			if (nextTrim() != ':')
 				throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
 			
 //			skipValue();
@@ -208,16 +196,16 @@ public class JSONStream {
 			case 0:
 				return false;
 			default:
-				while((c = next()) != 0 && c != ',' && c != '}');
+				while ((c = next()) != 0 && c != ',' && c != '}');
 				back();
 				break;
 			}
 			
 			c = nextTrim();
-			if(c == ',') {
+			if (c == ',') {
 				continue;
 			}
-			if(c == '}')
+			if (c == '}')
 				return false;
 			throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
 		}
@@ -267,7 +255,7 @@ public class JSONStream {
 		case 0:
 			return;
 		default:
-			while((c = next()) != 0 && c != ',' && c != ':' && c != '}' && c != ']');
+			while ((c = next()) != 0 && c != ',' && c != ':' && c != '}' && c != ']');
 			back();
 			break;
 		}
@@ -276,14 +264,14 @@ public class JSONStream {
 	// Basic reader functions
 	
 	public char next() throws IOException {
-		if(usePrev) {
+		if (usePrev) {
 			usePrev = false;
 			index++;
 			return prev;
 		}
-//		if(eof) return 0;
+//		if (eof) return 0;
 		int r = reader.read();
-		if(r <= 0) {
+		if (r <= 0) {
 			eof = true;
 			return 0;
 		}
@@ -293,12 +281,12 @@ public class JSONStream {
 	
 	public char nextTrim() throws IOException {
 		char c;
-		while((c = next()) < ' ' && c != 0);
+		while ((c = next()) < ' ' && c != 0);
 		return c;
 	}
 	
 	public void skip(int n) throws IOException {
-		if(usePrev) {
+		if (usePrev) {
 			usePrev = false;
 			n--;
 		}
@@ -307,7 +295,7 @@ public class JSONStream {
 	}
 
 	public void back() {
-		if(usePrev || index <= 0) throw new JSONException("back");
+		if (usePrev || index <= 0) throw new JSONException("back");
 		usePrev = true;
 		index--;
 	}
@@ -318,7 +306,7 @@ public class JSONStream {
 	
 	public void expectNext(char c) throws IOException {
 		char n;
-		if((n = next()) != c)
+		if ((n = next()) != c)
 			throw new JSONException("Expected '" + c + "', but got '" + n + "' at " + (index-1));
 	}
 	
@@ -347,15 +335,15 @@ public class JSONStream {
 	//
 	
 	private JSONObject nextObject(boolean check) throws IOException {
-		if(check && nextTrim() != '{') {
+		if (check && nextTrim() != '{') {
 			back();
 			throw new JSONException("nextObject: not object at ".concat(Integer.toString(index)));
 		}
 		JSONObject r = new JSONObject();
 		object: {
-		while(true) {
+		while (true) {
 			String key = nextString(true);
-			if(nextTrim() != ':')
+			if (nextTrim() != ':')
 				throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
 			Object val = null;
 			char c = nextTrim();
@@ -371,15 +359,15 @@ public class JSONStream {
 			case '"':
 				val = nextString(false);
 				break;
-			case 'n':
+			case 'n': // null
 				skip(3);
 				val = JSON.json_null;
 				break;
-			case 't':
+			case 't': // true
 				skip(3);
 				val = JSON.TRUE;
 				break;
-			case 'f':
+			case 'f': // false
 				skip(4);
 				val = JSON.FALSE;
 				break;
@@ -390,26 +378,26 @@ public class JSONStream {
 			}
 			r.put(key, val);
 			c = nextTrim();
-			if(c == ',') {
+			if (c == ',') {
 				continue;
 			}
-			if(c == '}') break;
+			if (c == '}') break;
 			throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
 		}
 		}
-		if(eof)
+		if (eof)
 			throw new IOException("nextObject: Unexpected end");
 		return r;
 	}
 	
 	private JSONArray nextArray(boolean check) throws IOException {
-		if(check && nextTrim() != '[') {
+		if (check && nextTrim() != '[') {
 			back();
 			throw new JSONException("nextArray: not array at ".concat(Integer.toString(index)));
 		}
 		JSONArray r = new JSONArray();
 		array: {
-		while(true) {
+		while (true) {
 			Object val = null;
 			char c = nextTrim();
 			switch(c) {
@@ -424,51 +412,51 @@ public class JSONStream {
 			case '"':
 				val = nextString(false);
 				break;
-			case 'n':
+			case 'n': // null
 				skip(3);
 				val = JSON.json_null;
 				break;
-			case 't':
+			case 't': // true
 				skip(3);
 				val = JSON.TRUE;
 				break;
-			case 'f':
+			case 'f': // false
 				skip(4);
 				val = JSON.FALSE;
 				break;
 			default:
 				back();
-				val = nextNumber();
+				val = nextValue(true);
 				break;
 			}
 			r.addElement(val);
 			c = nextTrim();
-			if(c == ',') {
+			if (c == ',') {
 				continue;
 			}
-			if(c == ']') break;
+			if (c == ']') break;
 			throw new JSONException("nextArray: malformed array at ".concat(Integer.toString(index)));
 		}
 		}
-		if(eof)
+		if (eof)
 			throw new IOException("nextArray: Unexpected end");
 		return r;
 	}
 	
 	private String nextString(boolean check) throws IOException {
-		if(check && nextTrim() != '"') {
+		if (check && nextTrim() != '"') {
 			back();
 			throw new JSONException("nextString: not string at ".concat(Integer.toString(index)));
 		}
 		StringBuffer sb = new StringBuffer();
 		char l = 0;
-		while(true) {
+		while (true) {
 			char c = next();
-			if(c == '\\' && l != '\\') {
+			if (c == '\\' && l != '\\') {
 				l = c;
 				continue;
 			}
-			if(c == 'u' && l == '\\') {
+			if (c == 'u' && l == '\\') {
 				char[] chars = new char[4];
 				chars[0] = next();
 				chars[1] = next();
@@ -477,18 +465,18 @@ public class JSONStream {
 				sb.append(l = (char) Integer.parseInt(new String(chars), 16));
 				continue;
 			}
-			if(c == 0 || (l != '\\' && c == '"')) break;
+			if (c == 0 || (l != '\\' && c == '"')) break;
 			sb.append(c);
 			l = c;
 		}
-		if(eof)
+		if (eof)
 			throw new IOException("nextString: Unexpected end");
 		return sb.toString();
 	}
 	
 	private void skipObject() throws IOException {
-		while(true) {
-			if(nextTrim() != ':')
+		while (true) {
+			if (nextTrim() != ':')
 				throw new JSONException("skipObject: malformed object at ".concat(Integer.toString(index)));
 			char c = nextTrim();
 			switch(c) {
@@ -506,21 +494,21 @@ public class JSONStream {
 			case 0:
 				return;
 			default:
-				while((c = next()) != 0 && c != ',' && c != ':' && c != '}');
+				while ((c = next()) != 0 && c != ',' && c != ':' && c != '}');
 				back();
 				break;
 			}
 			c = nextTrim();
-			if(c == ',') {
+			if (c == ',') {
 				continue;
 			}
-			if(c == '}') return;
+			if (c == '}') return;
 			throw new JSONException("skipObject: malformed object at ".concat(Integer.toString(index)));
 		}
 	}
 	
 	private void skipArray() throws IOException {
-		while(true) {
+		while (true) {
 			char c = nextTrim();
 			switch(c) {
 			case ']':
@@ -537,12 +525,12 @@ public class JSONStream {
 			case 0:
 				return;
 			default:
-				while((c = next()) != 0 && c != ',' && c != ']');
+				while ((c = next()) != 0 && c != ',' && c != ']');
 				back();
 				break;
 			}
 			c = nextTrim();
-			if(c == ',') {
+			if (c == ',') {
 				continue;
 			}
 			return;
@@ -551,26 +539,26 @@ public class JSONStream {
 	
 	private void skipString() throws IOException {
 		char l = 0;
-		while(true) {
+		while (true) {
 			char c = next();
-			if(c == 0 || (l != '\\' && c == '"')) break;
+			if (c == 0 || (l != '\\' && c == '"')) break;
 			l = c;
 		}
 	}
 	
 	private Object nextValue(boolean convertToNumber) throws IOException {
 		StringBuffer sb = new StringBuffer();
-		while(true) {
+		while (true) {
 			char c = next();
-			if(c == 0) throw new JSONException("nextValue: Unexpected end");
-			if(c == ',' || c == ']' || c == '}' || c == ':') {
+			if (c == 0) throw new JSONException("nextValue: Unexpected end");
+			if (c == ',' || c == ']' || c == '}' || c == ':') {
 				back();
 				break;
 			}
 			sb.append(c);
 		}
 		String str = sb.toString();
-		if(convertToNumber) {
+		if (convertToNumber) {
 			char first = str.charAt(0);
 			int length = str.length();
 			if ((first >= '0' && first <= '9') || first == '-') {

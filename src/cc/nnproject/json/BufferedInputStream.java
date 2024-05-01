@@ -3,14 +3,14 @@ package cc.nnproject.json;
 import java.io.IOException;
 import java.io.InputStream;
 
-class BufferedInputStream extends InputStream {
+public class BufferedInputStream extends InputStream {
 	
 	private InputStream in;
 	private byte[] buf;
 	private int pos;
 	private int count;
 	
-	BufferedInputStream(InputStream stream) {
+	public BufferedInputStream(InputStream stream) {
 		in = stream;
 		buf = new byte[2048];
 	}
