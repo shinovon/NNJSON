@@ -1,3 +1,24 @@
+/*
+Copyright (c) 2024 Arman Jussupgaliyev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 package cc.nnproject.json;
 
 import java.io.IOException;
@@ -5,12 +26,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+// Streaming JSON
+
 public class JSONStream {
 
 	public static String encoding = "UTF-8";
 	public static boolean buffer = true;
 	
-	private InputStream stream;
 	private Reader reader;
 	private boolean isObject;
 	int index;
@@ -24,23 +46,37 @@ public class JSONStream {
 		if(buffer) {
 			in = new BufferedInputStream(in);
 		}
-		reader = new InputStreamReader(stream = in, "UTF-8");
+		reader = new InputStreamReader(in, "UTF-8");
 //		if(buffer) {
 //			reader = new BufferedReader(reader);
 //		}
 	}
 	
+	// Static functions
+	
 	public static JSONStream getStream(InputStream in) throws IOException {
 		JSONStream json = new JSONStream();
 		json.init(in);
 		char c = json.nextTrim();
-		if(c != '{' && c != '[') throw new JSONException("getStream: Not json");
+		if(c != '{' && c != '[')
+			throw new JSONException("getStream: Not json");
 		json.isObject = c == '{';
 		json.usePrev = true;
 		return json;
 	}
 	
-	public static AbstractJSON getFullJSON(InputStream in) throws IOException {
+	public static JSONStream getStream(Reader r) throws IOException {
+		JSONStream json = new JSONStream();
+		json.reader = r;
+		char c = json.nextTrim();
+		if(c != '{' && c != '[')
+			throw new JSONException("getStream: Not json");
+		json.isObject = c == '{';
+		json.usePrev = true;
+		return json;
+	}
+	
+	public static AbstractJSON getJSON(InputStream in) throws IOException {
 		if(buffer) {
 			in = new BufferedInputStream(in);
 		}
@@ -48,7 +84,8 @@ public class JSONStream {
 		try {
 			json.init(in);
 			char c = json.nextTrim();
-			if(c != '[' && c != '{') throw new JSONException("getFullJSON: Not json");
+			if(c != '[' && c != '{')
+				throw new JSONException("getFullJSON: Not json");
 			if(c == '{')
 				return json.nextObject(false);
 			else 
@@ -58,7 +95,7 @@ public class JSONStream {
 		}
 	}
 	
-	public static JSONObject getFullObject(InputStream in) throws IOException {
+	public static JSONObject getObject(InputStream in) throws IOException {
 		if(buffer) {
 			in = new BufferedInputStream(in);
 		}
@@ -73,7 +110,7 @@ public class JSONStream {
 		}
 	}
 	
-	public static JSONArray getFullArray(InputStream in) throws IOException {
+	public static JSONArray getArray(InputStream in) throws IOException {
 		if(buffer) {
 			in = new BufferedInputStream(in);
 		}
@@ -88,7 +125,7 @@ public class JSONStream {
 		}
 	}
 	
-	//
+	// Streaming JSON functions
 	
 	public Object nextValue() throws IOException {
 		char c = nextTrim();
@@ -129,7 +166,7 @@ public class JSONStream {
 	public Object nextNumber() throws IOException {
 		Object v = nextValue(true);
 		if(v instanceof String)
-			throw new JSONException("nextNumber: " + v);
+			throw new JSONException("nextNumber: not number: ".concat(String.valueOf(v)));
 		return v;
 	}
 	
@@ -182,7 +219,7 @@ public class JSONStream {
 			}
 			if(c == '}')
 				return false;
-			throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
+			throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
 		}
 	}
 	
@@ -280,7 +317,31 @@ public class JSONStream {
 	}
 	
 	public void expectNext(char c) throws IOException {
-		assertNext("expectNext", c);
+		char n;
+		if((n = next()) != c)
+			throw new JSONException("Expected '" + c + "', but got '" + n + "' at " + (index-1));
+	}
+	
+	/**
+	 * @deprecated mark is probably not supported, since target is CLDC
+	 */
+	public void reset() throws IOException {
+		index = prev = 0;
+		usePrev = false;
+		reader.reset();
+	}
+	
+	public void reset(InputStream is) throws IOException {
+		try {
+			close();
+		} catch (IOException e) {}
+		index = prev = 0;
+		usePrev = false;
+		init(is);
+	}
+	
+	public void close() throws IOException {
+		reader.close();
 	}
 	
 	//
@@ -295,7 +356,7 @@ public class JSONStream {
 		while(true) {
 			String key = nextString(true);
 			if(nextTrim() != ':')
-				throw new JSONException("readObject: malformed object at ".concat(Integer.toString(index)));
+				throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
 			Object val = null;
 			char c = nextTrim();
 			switch(c) {
@@ -531,31 +592,6 @@ public class JSONStream {
 			}
 		}
 		return str;
-	}
-	
-	private void assertNext(String f, char c) throws IOException {
-		char n;
-		if((n = next()) != c) throw new JSONException(f + ": Expected: \'" + c + "\', but got: " + n + " at " + (index-1));
-	}
-	
-	public void reset() throws IOException {
-		index = prev = 0;
-		usePrev = false;
-		reader.reset();
-	}
-	
-	public void reset(InputStream is) throws IOException {
-		try {
-			close();
-		} catch (IOException e) {}
-		index = prev = 0;
-		usePrev = false;
-		init(is);
-	}
-	
-	public void close() throws IOException {
-		reader.close();
-		stream.close();
 	}
 
 }
