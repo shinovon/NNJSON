@@ -297,7 +297,7 @@ public final class JSON {
 				sb.append("\\t");
 				break;
 			default:
-				if (c < 32 || c > 1103) {
+				if (c < 32 || c > 1103 || (c >= '\u0080' && c < '\u00a0')) {
 					String u = Integer.toHexString(c);
 					sb.append("\\u");
 					for (int z = u.length(); z < 4; z++) {
