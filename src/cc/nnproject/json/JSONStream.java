@@ -514,6 +514,18 @@ public class JSONStream {
 				sb.append(l = (char) Integer.parseInt(new String(chars), 16));
 				continue;
 			}
+			if (c == 'n' && l == '\\') {
+				sb.append('\n');
+				continue;
+			}
+			if (c == 'r' && l == '\\') {
+				sb.append('\r');
+				continue;
+			}
+			if (c == 't' && l == '\\') {
+				sb.append('\t');
+				continue;
+			}
 			if (c == 0 || (l != '\\' && c == '"')) break;
 			sb.append(c);
 			l = c;
