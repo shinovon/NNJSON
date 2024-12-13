@@ -85,9 +85,11 @@ public final class JSON {
 
 	static Object parseJSON(String str) throws JSONException {
 		char first = str.charAt(0);
-		int length = str.length() - 1;
-		char last = str.charAt(length);
-		switch(first) {
+		int length;
+		char last = str.charAt(length = str.length() - 1);
+		if (last <= ' ')
+			last = (str = str.trim()).charAt(length = str.length() - 1);
+		switch (first) {
 		case '"': { // string
 			if (last != '"')
 				throw new JSONException("Unexpected end of text");
