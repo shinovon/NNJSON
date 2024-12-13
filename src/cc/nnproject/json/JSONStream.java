@@ -117,7 +117,7 @@ public class JSONStream {
 	
 	public Object nextValue() throws IOException {
 		char c = nextTrim();
-		switch(c) {
+		switch (c) {
 		case '{':
 			return nextObject(false);
 		case '[':
@@ -191,7 +191,7 @@ public class JSONStream {
 //			skipValue();
 			c = nextTrim();
 			
-			switch(c) {
+			switch (c) {
 			case '{':
 				skipObject();
 				break;
@@ -225,7 +225,7 @@ public class JSONStream {
 	public boolean skipArrayElements(int count) throws IOException {
 		while (true) {
 			char c = nextTrim();
-			switch(c) {
+			switch (c) {
 			case ']':
 				return false;
 			case '{':
@@ -246,7 +246,7 @@ public class JSONStream {
 			}
 			c = nextTrim();
 			if (c == ',') {
-				if(--count == 0)
+				if (--count == 0)
 					return true;
 				continue;
 			}
@@ -260,22 +260,22 @@ public class JSONStream {
 //		boolean q = false;
 //		boolean e = false;
 //		while(true) {
-//			if(p) {
+//			if (p) {
 //				p = false;
 //			} else c = next();
-//			if(c == 0) return false;
-//			if(!e) {
-//				if(c == '\\') e = true;
-//				else if(c == '"') q = !q;
+//			if (c == 0) return false;
+//			if (!e) {
+//				if (c == '\\') e = true;
+//				else if (c == '"') q = !q;
 //			} else e = false;
-//			if(!q)
-//			if(c == '{' || c == ',') {
-//				if((c = next()) == '\"') {
+//			if (!q)
+//			if (c == '{' || c == ',') {
+//				if ((c = next()) == '\"') {
 //					back();
 //					String s = nextString();
-//					if(nextTrim() != ':')
+//					if (nextTrim() != ':')
 //						throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
-//					if(key.equals(s)) return true;
+//					if (key.equals(s)) return true;
 //				} else p = true;
 //			}
 //		}
@@ -285,7 +285,7 @@ public class JSONStream {
 	
 	public void skipValue() throws IOException {
 		char c = nextTrim();
-		switch(c) {
+		switch (c) {
 		case '{':
 			skipObject();
 			break;
@@ -396,7 +396,7 @@ public class JSONStream {
 				throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
 			Object val = null;
 			char c = nextTrim();
-			switch(c) {
+			switch (c) {
 			case '}':
 				break object;
 			case '{':
@@ -449,7 +449,7 @@ public class JSONStream {
 		while (true) {
 			Object val = null;
 			char c = nextTrim();
-			switch(c) {
+			switch (c) {
 			case ']':
 				break array;
 			case '{':
@@ -543,7 +543,7 @@ public class JSONStream {
 			if (nextTrim() != ':')
 				throw new JSONException("skipObject: malformed object at ".concat(Integer.toString(index)));
 			char c = nextTrim();
-			switch(c) {
+			switch (c) {
 			case '}':
 				return;
 			case '{':
@@ -574,7 +574,7 @@ public class JSONStream {
 	private void skipArray() throws IOException {
 		while (true) {
 			char c = nextTrim();
-			switch(c) {
+			switch (c) {
 			case ']':
 				return;
 			case '{':

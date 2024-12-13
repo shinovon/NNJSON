@@ -91,7 +91,7 @@ public final class JSON {
 		case '"': { // string
 			if (last != '"')
 				throw new JSONException("Unexpected end of text");
-			if(str.indexOf('\\') != -1) {
+			if (str.indexOf('\\') != -1) {
 				char[] chars = str.substring(1, length).toCharArray();
 				str = null;
 				int l = chars.length;
@@ -224,7 +224,7 @@ public final class JSON {
 					char c = ((String) value).charAt(0);
 					// leave JSONString as value to parse it later, if its object or array and nested parsing is disabled
 					value = parse_members || (c != '{' && c != '[') ?
-							parseJSON((String) value) : new JSONString((String) value);
+							parseJSON((String) value) : new String[] {(String) value};
 					if (object) {
 						((JSONObject) res)._put(key, value);
 						key = null;
@@ -261,7 +261,7 @@ public final class JSON {
 				} catch (Exception e) {}
 			}
 			throw new JSONException("Couldn't be parsed: " + str);
-//			return new JSONString(str);
+//			return new String[](str);
 		}
 	}
 	
@@ -315,8 +315,8 @@ public final class JSON {
 
 	static double getDouble(Object o) throws JSONException {
 		try {
-			if (o instanceof JSONString)
-				return Double.parseDouble(((JSONString) o).str);
+			if (o instanceof String[])
+				return Double.parseDouble(((String[]) o)[0]);
 			if (o instanceof Integer)
 				return ((Integer) o).intValue();
 			if (o instanceof Long)
@@ -329,8 +329,8 @@ public final class JSON {
 
 	static int getInt(Object o) throws JSONException {
 		try {
-			if (o instanceof JSONString)
-				return Integer.parseInt(((JSONString) o).str);
+			if (o instanceof String[])
+				return Integer.parseInt(((String[]) o)[0]);
 			if (o instanceof Integer)
 				return ((Integer) o).intValue();
 			if (o instanceof Long)
@@ -343,8 +343,8 @@ public final class JSON {
 
 	static long getLong(Object o) throws JSONException {
 		try {
-			if (o instanceof JSONString)
-				return Long.parseLong(((JSONString) o).str);
+			if (o instanceof String[])
+				return Long.parseLong(((String[]) o)[0]);
 			if (o instanceof Integer)
 				return ((Integer) o).longValue();
 			if (o instanceof Long)

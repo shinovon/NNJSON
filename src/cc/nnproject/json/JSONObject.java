@@ -50,8 +50,8 @@ public class JSONObject extends AbstractJSON {
 		try {
 			if (has(name)) {
 				Object o = table.get(name);
-				if (o instanceof JSONString)
-					table.put(name, o = JSON.parseJSON(((JSONString) o).str));
+				if (o instanceof String[])
+					table.put(name, o = JSON.parseJSON(((String[]) o).str));
 				if (o == JSON.json_null)
 					return null;
 				return o;
@@ -322,6 +322,8 @@ public class JSONObject extends AbstractJSON {
 				s.append(((AbstractJSON) v).build());
 			} else if (v instanceof String) {
 				s.append("\"").append(JSON.escape_utf8((String) v)).append("\"");
+			} else if (v instanceof String[]) {
+				s.append(((String[]) v)[0]);
 			} else if (v == JSON.json_null) {
 				s.append((String) null);
 			} else {
@@ -353,8 +355,8 @@ public class JSONObject extends AbstractJSON {
 			String k = (String) keys.nextElement();
 			s.append("\"").append(k).append("\": ");
 			Object v = get(k);
-			if (v instanceof JSONString)
-				table.put(k, v = JSON.parseJSON(((JSONString) v).str));
+			if (v instanceof String[])
+				table.put(k, v = JSON.parseJSON(((String[]) v)[0]));
 			if (v instanceof AbstractJSON) {
 				s.append(((AbstractJSON) v).format(l + 1));
 			} else if (v instanceof String) {
@@ -403,8 +405,8 @@ public class JSONObject extends AbstractJSON {
 		while (keys.hasMoreElements()) {
 			String k = (String) keys.nextElement();
 			Object v = table.get(k);
-			if (v instanceof JSONString)
-				table.put(k, v = JSON.parseJSON(((JSONString) v).str));
+			if (v instanceof String[])
+				table.put(k, v = JSON.parseJSON(((String[]) v)[0]));
 			if (v instanceof JSONObject) {
 				v = ((JSONObject) v).toTable();
 			} else if (v instanceof JSONArray) {

@@ -60,8 +60,8 @@ public class JSONArray extends AbstractJSON {
 		}
 		try {
 			Object o = elements[index];
-			if (o instanceof JSONString)
-				o = elements[index] = JSON.parseJSON(((JSONString) o).str);
+			if (o instanceof String[])
+				o = elements[index] = JSON.parseJSON(((String[]) o)[0]);
 			if (o == JSON.json_null)
 				return null;
 			return o;
@@ -438,6 +438,8 @@ public class JSONArray extends AbstractJSON {
 				s.append(((AbstractJSON) v).build());
 			} else if (v instanceof String) {
 				s.append("\"").append(JSON.escape_utf8((String) v)).append("\"");
+			} else if (v instanceof String[]) {
+				s.append(((String[]) v)[0]);
 			} else if (v == JSON.json_null) {
 				s.append((String) null);
 			} else {
@@ -466,8 +468,8 @@ public class JSONArray extends AbstractJSON {
 		int i = 0;
 		while (i < size) {
 			Object v = elements[i];
-			if (v instanceof JSONString) {
-				v = elements[i] = JSON.parseJSON(((JSONString) v).str);
+			if (v instanceof String[]) {
+				v = elements[i] = JSON.parseJSON(((String[]) v)[0]);
 			}
 			if (v instanceof AbstractJSON) {
 				s.append(((AbstractJSON) v).format(l + 1));
@@ -501,8 +503,8 @@ public class JSONArray extends AbstractJSON {
 			
 			public Object nextElement() {
 				Object o = elements[i];
-				if (o instanceof JSONString)
-					o = elements[i] = JSON.parseJSON(((JSONString) o).str);
+				if (o instanceof String[])
+					o = elements[i] = JSON.parseJSON(((String[]) o)[0]);
 				i++;
 				return o == JSON.json_null ? null : o;
 			}
@@ -526,8 +528,8 @@ public class JSONArray extends AbstractJSON {
 		Vector copy = new Vector(size);
 		for (int i = 0; i < size; i++) {
 			Object o = elements[i];
-			if (o instanceof JSONString)
-				o = elements[i] = JSON.parseJSON(((JSONString) o).str);
+			if (o instanceof String[])
+				o = elements[i] = JSON.parseJSON(((String[]) o)[0]);
 			if (o instanceof JSONObject) {
 				o = ((JSONObject) o).toTable();
 			} else if (o instanceof JSONArray) {
@@ -557,8 +559,8 @@ public class JSONArray extends AbstractJSON {
 	
 	private int _indexOf(Object object, int start) {
 		for (int i = start; i < count; i++) {
-			if (elements[i] instanceof JSONString)
-				elements[i] = JSON.parseJSON(((JSONString) elements[i]).str);
+			if (elements[i] instanceof String[])
+				elements[i] = JSON.parseJSON(((String[]) elements[i])[0]);
 			if (object.equals(elements[i])) return i;
 		}
 		return -1;
