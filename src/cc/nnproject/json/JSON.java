@@ -27,7 +27,7 @@ import java.util.Vector;
 /**
  * JSON Library compatible with CLDC 1.1 & JDK 1.1<br>
  * Usage:<p><code>JSONObject obj = JSON.getObject(str);</code></p>
- * <b>Use with proguard argument</b>: <p><code>-optimizations !code/simplification/object</code>
+ * <b>When using proguard, add</b>: <p><code>-optimizations !code/simplification/object</code>
  * @author Shinovon
  * @version 2.2
  */
@@ -39,7 +39,7 @@ public final class JSON {
 	// identation for formatting
 	static final String FORMAT_TAB = "  ";
 	
-	// used for storing nulls, get methods must return real null
+	// used internally for storing nulls, get methods must return real null
 	public static final Object json_null = new Object();
 	
 	public static final Boolean TRUE = new Boolean(true);

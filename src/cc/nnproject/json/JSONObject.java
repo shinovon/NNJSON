@@ -51,15 +51,14 @@ public class JSONObject extends AbstractJSON {
 			if (has(name)) {
 				Object o = table.get(name);
 				if (o instanceof String[])
-					table.put(name, o = JSON.parseJSON(((String[]) o).str));
+					table.put(name, o = JSON.parseJSON(((String[]) o)[0]));
 				if (o == JSON.json_null)
 					return null;
 				return o;
 			}
 		} catch (JSONException e) {
 			throw e;
-		} catch (Exception e) {
-		}
+		} catch (Exception e) {}
 		throw new JSONException("No value for name: " + name);
 	}
 	
@@ -111,8 +110,7 @@ public class JSONObject extends AbstractJSON {
 		if (has(name)) {
 			try {
 				return (JSONObject) get(name);
-			} catch (Exception e) {
-			}
+			} catch (Exception e) {}
 		}
 		return def;
 	}
@@ -422,6 +420,5 @@ public class JSONObject extends AbstractJSON {
 	}
 	
 	// TODO: Enumeration elements()
-	// TODO: String keyOf(Object)
 
 }
