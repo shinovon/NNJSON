@@ -505,26 +505,36 @@ public class JSONStream {
 				l = c;
 				continue;
 			}
-			if (c == 'u' && l == '\\') {
-				char[] chars = new char[4];
-				chars[0] = next();
-				chars[1] = next();
-				chars[2] = next();
-				chars[3] = next();
-				sb.append(l = (char) Integer.parseInt(new String(chars), 16));
-				continue;
-			}
-			if (c == 'n' && l == '\\') {
-				sb.append('\n');
-				continue;
-			}
-			if (c == 'r' && l == '\\') {
-				sb.append('\r');
-				continue;
-			}
-			if (c == 't' && l == '\\') {
-				sb.append('\t');
-				continue;
+			if (l == '\\') {
+				if (c == 'u') {
+					char[] chars = new char[4];
+					chars[0] = next();
+					chars[1] = next();
+					chars[2] = next();
+					chars[3] = next();
+					sb.append(l = (char) Integer.parseInt(new String(chars), 16));
+					continue;
+				}
+				if (c == 'n') {
+					sb.append(l = '\n');
+					continue;
+				}
+				if (c == 'r') {
+					sb.append(l = '\r');
+					continue;
+				}
+				if (c == 't') {
+					sb.append(l = '\t');
+					continue;
+				}
+				if (c == 'f') {
+					sb.append(l = '\f');
+					continue;
+				}
+				if (c == 'b') {
+					sb.append(l = '\b');
+					continue;
+				}
 			}
 			if (c == 0 || (l != '\\' && c == '"')) break;
 			sb.append(c);
