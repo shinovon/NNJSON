@@ -391,11 +391,14 @@ public class JSONStream {
 		JSONObject r = new JSONObject();
 		object: {
 		while (true) {
+			char c = nextTrim();
+			if (c == '}') break object;
+			back();
 			String key = nextString(true);
 			if (nextTrim() != ':')
 				throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
 			Object val = null;
-			char c = nextTrim();
+			c = nextTrim();
 			switch (c) {
 			case '}':
 				break object;
