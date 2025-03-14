@@ -28,10 +28,7 @@ import java.io.Reader;
 
 // Streaming JSON
 
-public class JSONStream {
-
-	public static String encoding = "UTF-8";
-	public static boolean buffer = true;
+public class JSONStream extends Reader {
 	
 	private Reader reader;
 	private boolean isObject;
@@ -44,9 +41,7 @@ public class JSONStream {
 	
 	private void init(InputStream in) throws IOException {
 		reader = new InputStreamReader(in, "UTF-8");
-		if (buffer) {
-			reader = new BufferedReader(reader);
-		}
+        iBuf = new char[BUF_SIZE];
 	}
 	
 	// Static functions
@@ -56,7 +51,7 @@ public class JSONStream {
 		json.init(in);
 		char c = json.nextTrim();
 		if (c != '{' && c != '[')
-			throw new JSONException("getStream: Not json");
+			throw new RuntimeException("JSON: getStream: Not json");
 		json.isObject = c == '{';
 		json.usePrev = true;
 		return json;
@@ -67,26 +62,10 @@ public class JSONStream {
 		json.reader = r;
 		char c = json.nextTrim();
 		if (c != '{' && c != '[')
-			throw new JSONException("getStream: Not json");
+			throw new RuntimeException("JSON: getStream: Not json");
 		json.isObject = c == '{';
 		json.usePrev = true;
 		return json;
-	}
-	
-	public static AbstractJSON getJSON(InputStream in) throws IOException {
-		JSONStream json = new JSONStream();
-		try {
-			json.init(in);
-			char c = json.nextTrim();
-			if (c != '[' && c != '{')
-				throw new JSONException("getJSON: Not json");
-			if (c == '{')
-				return json.nextObject(false);
-			else 
-				return json.nextArray(false);
-		} finally {
-			json.close();
-		}
 	}
 	
 	public static JSONObject getObject(InputStream in) throws IOException {
@@ -94,7 +73,7 @@ public class JSONStream {
 		try {
 			json.init(in);
 			char c = json.nextTrim();
-			if (c != '{') throw new JSONException("getObject: not object");
+			if (c != '{') throw new RuntimeException("JSON: getObject: not object");
 			return json.nextObject(false);
 		} finally {
 			json.close();
@@ -106,7 +85,7 @@ public class JSONStream {
 		try {
 			json.init(in);
 			char c = json.nextTrim();
-			if (c != '[') throw new JSONException("getArray: not array");
+			if (c != '[') throw new RuntimeException("JSON: getArray: not array");
 			return json.nextArray(false);
 		} finally {
 			json.close();
@@ -117,7 +96,7 @@ public class JSONStream {
 	
 	public Object nextValue() throws IOException {
 		char c = nextTrim();
-		switch (c) {
+		switch(c) {
 		case '{':
 			return nextObject(false);
 		case '[':
@@ -126,13 +105,13 @@ public class JSONStream {
 			return nextString(false);
 		case 't': // true
 			skip(3);
-			return JSON.TRUE;
+			return JSONObject.TRUE;
 		case 'f': // false
 			skip(4);
-			return JSON.FALSE;
+			return JSONObject.FALSE;
 		case 'n': // null
 			skip(3);
-			return JSON.json_null;
+			return JSONObject.json_null;
 		default:
 			back();
 			return nextValue(true);
@@ -154,7 +133,7 @@ public class JSONStream {
 	public Object nextNumber() throws IOException {
 		Object v = nextValue(true);
 		if (v instanceof String)
-			throw new JSONException("nextNumber: not number: ".concat(String.valueOf(v)));
+			throw new RuntimeException("JSON: nextNumber: not number: ".concat(String.valueOf(v)));
 		return v;
 	}
 	
@@ -172,7 +151,7 @@ public class JSONStream {
 	// Result is found, if false will skip to the end of object
 	public boolean jumpToKey(String key) throws IOException {
 //		if (!isObject)
-//			throw new JSONException("jumpToKey: not object");
+//			throw new RuntimeException("JSON: jumpToKey: not object");
 		
 		char c;
 //		while((c = nextTrim()) != '"' && c != 0);
@@ -187,16 +166,16 @@ public class JSONStream {
 			if (nextString(true).equals(key)) {
 				// jump to value
 				if (nextTrim() != ':')
-					throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
+					throw new RuntimeException("JSON: jumpToKey: malformed object at ".concat(Integer.toString(index)));
 				return true;
 			}
 			if (nextTrim() != ':')
-				throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
+				throw new RuntimeException("JSON: jumpToKey: malformed object at ".concat(Integer.toString(index)));
 			
 //			skipValue();
 			c = nextTrim();
 			
-			switch (c) {
+			switch(c) {
 			case '{':
 				skipObject();
 				break;
@@ -220,7 +199,7 @@ public class JSONStream {
 			}
 			if (c == '}')
 				return false;
-			throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: jumpToKey: malformed object at ".concat(Integer.toString(index)));
 		}
 	}
 	
@@ -230,7 +209,7 @@ public class JSONStream {
 	public boolean skipArrayElements(int count) throws IOException {
 		while (true) {
 			char c = nextTrim();
-			switch (c) {
+			switch(c) {
 			case ']':
 				return false;
 			case '{':
@@ -251,7 +230,7 @@ public class JSONStream {
 			}
 			c = nextTrim();
 			if (c == ',') {
-				if (--count == 0)
+				if(--count == 0)
 					return true;
 				continue;
 			}
@@ -265,22 +244,22 @@ public class JSONStream {
 //		boolean q = false;
 //		boolean e = false;
 //		while(true) {
-//			if (p) {
+//			if(p) {
 //				p = false;
 //			} else c = next();
-//			if (c == 0) return false;
-//			if (!e) {
-//				if (c == '\\') e = true;
-//				else if (c == '"') q = !q;
+//			if(c == 0) return false;
+//			if(!e) {
+//				if(c == '\\') e = true;
+//				else if(c == '"') q = !q;
 //			} else e = false;
-//			if (!q)
-//			if (c == '{' || c == ',') {
-//				if ((c = next()) == '\"') {
+//			if(!q)
+//			if(c == '{' || c == ',') {
+//				if((c = next()) == '\"') {
 //					back();
 //					String s = nextString();
-//					if (nextTrim() != ':')
-//						throw new JSONException("jumpToKey: malformed object at ".concat(Integer.toString(index)));
-//					if (key.equals(s)) return true;
+//					if(nextTrim() != ':')
+//						throw new RuntimeException("JSON: jumpToKey: malformed object at ".concat(Integer.toString(index)));
+//					if(key.equals(s)) return true;
 //				} else p = true;
 //			}
 //		}
@@ -290,7 +269,7 @@ public class JSONStream {
 	
 	public void skipValue() throws IOException {
 		char c = nextTrim();
-		switch (c) {
+		switch(c) {
 		case '{':
 			skipObject();
 			break;
@@ -318,7 +297,7 @@ public class JSONStream {
 			return prev;
 		}
 //		if (eof) return 0;
-		int r = reader.read();
+		int r = read();
 		if (r <= 0) {
 			eof = true;
 			return 0;
@@ -339,11 +318,11 @@ public class JSONStream {
 			n--;
 		}
 		index += n;
-		reader.skip(n);
+		skip((long) n);
 	}
 
 	public void back() {
-		if (usePrev || index <= 0) throw new JSONException("back");
+		if (usePrev || index <= 0) throw new RuntimeException("JSON: back");
 		usePrev = true;
 		index--;
 	}
@@ -355,13 +334,13 @@ public class JSONStream {
 	public void expectNext(char c) throws IOException {
 		char n;
 		if ((n = next()) != c)
-			throw new JSONException("Expected '" + c + "', but got '" + n + "' at " + (index-1));
+			throw new RuntimeException("JSON: Expected '" + c + "', but got '" + n + "' at " + (index-1));
 	}
 	
 	public void expectNextTrim(char c) throws IOException {
 		char n;
 		if ((n = nextTrim()) != c)
-			throw new JSONException("Expected '" + c + "', but got '" + n + "' at " + (index-1));
+			throw new RuntimeException("JSON: Expected '" + c + "', but got '" + n + "' at " + (index-1));
 	}
 	
 	/**
@@ -370,6 +349,7 @@ public class JSONStream {
 	public void reset() throws IOException {
 		index = prev = 0;
 		usePrev = false;
+		eof = false;
 		reader.reset();
 	}
 	
@@ -379,11 +359,8 @@ public class JSONStream {
 		} catch (IOException e) {}
 		index = prev = 0;
 		usePrev = false;
+		eof = false;
 		init(is);
-	}
-	
-	public void close() throws IOException {
-		reader.close();
 	}
 	
 	//
@@ -391,7 +368,7 @@ public class JSONStream {
 	private JSONObject nextObject(boolean check) throws IOException {
 		if (check && nextTrim() != '{') {
 			back();
-			throw new JSONException("nextObject: not object at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: nextObject: not object at ".concat(Integer.toString(index)));
 		}
 		JSONObject r = new JSONObject();
 		object: {
@@ -401,7 +378,7 @@ public class JSONStream {
 			back();
 			String key = nextString(true);
 			if (nextTrim() != ':')
-				throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
+				throw new RuntimeException("JSON: nextObject: malformed object at ".concat(Integer.toString(index)));
 			Object val = null;
 			c = nextTrim();
 			switch (c) {
@@ -418,15 +395,15 @@ public class JSONStream {
 				break;
 			case 'n': // null
 				skip(3);
-				val = JSON.json_null;
+				val = JSONObject.json_null;
 				break;
 			case 't': // true
 				skip(3);
-				val = JSON.TRUE;
+				val = JSONObject.TRUE;
 				break;
 			case 'f': // false
 				skip(4);
-				val = JSON.FALSE;
+				val = JSONObject.FALSE;
 				break;
 			default:
 				back();
@@ -439,7 +416,7 @@ public class JSONStream {
 				continue;
 			}
 			if (c == '}') break;
-			throw new JSONException("nextObject: malformed object at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: nextObject: malformed object at ".concat(Integer.toString(index)));
 		}
 		}
 		if (eof)
@@ -450,14 +427,14 @@ public class JSONStream {
 	private JSONArray nextArray(boolean check) throws IOException {
 		if (check && nextTrim() != '[') {
 			back();
-			throw new JSONException("nextArray: not array at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: nextArray: not array at ".concat(Integer.toString(index)));
 		}
 		JSONArray r = new JSONArray();
 		array: {
 		while (true) {
 			Object val = null;
 			char c = nextTrim();
-			switch (c) {
+			switch(c) {
 			case ']':
 				break array;
 			case '{':
@@ -471,15 +448,15 @@ public class JSONStream {
 				break;
 			case 'n': // null
 				skip(3);
-				val = JSON.json_null;
+				val = JSONObject.json_null;
 				break;
 			case 't': // true
 				skip(3);
-				val = JSON.TRUE;
+				val = JSONObject.TRUE;
 				break;
 			case 'f': // false
 				skip(4);
-				val = JSON.FALSE;
+				val = JSONObject.FALSE;
 				break;
 			default:
 				back();
@@ -492,7 +469,7 @@ public class JSONStream {
 				continue;
 			}
 			if (c == ']') break;
-			throw new JSONException("nextArray: malformed array at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: nextArray: malformed array at ".concat(Integer.toString(index)));
 		}
 		}
 		if (eof)
@@ -503,7 +480,7 @@ public class JSONStream {
 	private String nextString(boolean check) throws IOException {
 		if (check && nextTrim() != '"') {
 			back();
-			throw new JSONException("nextString: not string at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: nextString: not string at ".concat(Integer.toString(index)));
 		}
 		StringBuffer sb = new StringBuffer();
 		char l = 0;
@@ -513,36 +490,26 @@ public class JSONStream {
 				l = c;
 				continue;
 			}
-			if (l == '\\') {
-				if (c == 'u') {
-					char[] chars = new char[4];
-					chars[0] = next();
-					chars[1] = next();
-					chars[2] = next();
-					chars[3] = next();
-					sb.append(l = (char) Integer.parseInt(new String(chars), 16));
-					continue;
-				}
-				if (c == 'n') {
-					sb.append(l = '\n');
-					continue;
-				}
-				if (c == 'r') {
-					sb.append(l = '\r');
-					continue;
-				}
-				if (c == 't') {
-					sb.append(l = '\t');
-					continue;
-				}
-				if (c == 'f') {
-					sb.append(l = '\f');
-					continue;
-				}
-				if (c == 'b') {
-					sb.append(l = '\b');
-					continue;
-				}
+			if (c == 'u' && l == '\\') {
+				char[] chars = new char[4];
+				chars[0] = next();
+				chars[1] = next();
+				chars[2] = next();
+				chars[3] = next();
+				sb.append(l = (char) Integer.parseInt(new String(chars), 16));
+				continue;
+			}
+			if (c == 'n' && l == '\\') {
+				sb.append(l = '\n');
+				continue;
+			}
+			if (c == 'r' && l == '\\') {
+				sb.append(l = '\r');
+				continue;
+			}
+			if (c == 't' && l == '\\') {
+				sb.append(l = '\t');
+				continue;
 			}
 			if (c == 0 || (l != '\\' && c == '"')) break;
 			sb.append(c);
@@ -556,12 +523,12 @@ public class JSONStream {
 	private void skipObject() throws IOException {
 		while (true) {
 			if (nextTrim() != '"')
-				throw new JSONException("skipObject: malformed object at ".concat(Integer.toString(index)));
+				throw new RuntimeException("JSON: skipObject: malformed object at ".concat(Integer.toString(index)));
 			skipString();
 			if (nextTrim() != ':')
-				throw new JSONException("skipObject: malformed object at ".concat(Integer.toString(index)));
+				throw new RuntimeException("JSON: skipObject: malformed object at ".concat(Integer.toString(index)));
 			char c = nextTrim();
-			switch (c) {
+			switch(c) {
 			case '}':
 				return;
 			case '{':
@@ -585,14 +552,14 @@ public class JSONStream {
 				continue;
 			}
 			if (c == '}') return;
-			throw new JSONException("skipObject: malformed object at ".concat(Integer.toString(index)));
+			throw new RuntimeException("JSON: skipObject: malformed object at ".concat(Integer.toString(index)));
 		}
 	}
 	
 	private void skipArray() throws IOException {
 		while (true) {
 			char c = nextTrim();
-			switch (c) {
+			switch(c) {
 			case ']':
 				return;
 			case '{':
@@ -632,7 +599,7 @@ public class JSONStream {
 		StringBuffer sb = new StringBuffer();
 		while (true) {
 			char c = next();
-			if (c == 0) throw new JSONException("nextValue: Unexpected end");
+			if (c == 0) throw new RuntimeException("JSON: nextValue: Unexpected end");
 			if (c == ',' || c == ']' || c == '}' || c == ':' || c <= ' ') {
 				back();
 				break;
@@ -663,5 +630,253 @@ public class JSONStream {
 		}
 		return str;
 	}
+	
+	// Reader
+	
+	   /** Default buffer size. */
+    private static final int BUF_SIZE = 16384;
+
+    /** Character buffer. */
+    private char[] iBuf = null;
+
+    /** Amount of characters in the buffer.
+        Value must be between zero and iBuf.length. */
+    private int iBufAmount = 0;
+
+    /** Current read position in the buffer.
+        Value must be between zero and iBuf.length. */
+    private int iBufPos = 0;
+
+    /**
+     * @see java.io.BufferedReader#close()
+     */
+    public void close() throws IOException
+    {
+        iBuf = null;
+        iBufAmount = 0;
+        iBufPos = 0;
+        if (reader != null) {
+            reader.close();
+        }
+    }
+
+    /**
+     * @see java.io.BufferedReader#read()
+     */
+    public int read() throws IOException
+    {
+        int result = 0;
+        if (iBufPos >= iBufAmount) {
+            result = fillBuf();
+        }
+        if (result > -1)
+        {
+            result = iBuf[iBufPos++];
+        }
+        return result;
+    }
+
+    /**
+     * @see java.io.BufferedReader#read(char[])
+     */
+    public int read(char[] aBuf) throws IOException
+    {
+        return read(aBuf, 0, aBuf.length);
+    }
+
+    /**
+     * @see java.io.BufferedReader#read(char[], int, int)
+     */
+    public int read(char[] aBuf, int aOffset, int aLength) throws IOException
+    {
+        if (aOffset < 0 || aOffset >= aBuf.length)
+        {
+            throw new IllegalArgumentException(
+                "BufferedReader: Invalid buffer offset");
+        }
+        int charsToRead = aBuf.length - aOffset;
+        if (charsToRead > aLength)
+        {
+            charsToRead = aLength;
+        }
+        int bufCharCount = iBufAmount - iBufPos;
+        int readCount = 0;
+        if (charsToRead <= bufCharCount)
+        {
+            // All characters can be read from the buffer.
+            for (int i = 0; i < charsToRead; i++)
+            {
+                aBuf[aOffset+i] = iBuf[iBufPos++];
+            }
+            readCount += charsToRead;
+        }
+        else
+        {
+            // First read characters from the buffer,
+            // then read more characters from the Reader.
+            for (int i = 0; i < bufCharCount; i++)
+            {
+                aBuf[aOffset+i] = iBuf[iBufPos++];
+            }
+            readCount += bufCharCount;
+            // Whole buffer has now been read, fill the buffer again.
+            if (fillBuf() > -1)
+            {
+                // Read the remaining characters.
+                readCount += read(aBuf, aOffset+readCount, aLength-readCount);
+            }
+        }
+        if (readCount <= 0)
+        {
+            // Nothing has been read, return -1 to indicate end of stream.
+            readCount = -1;
+        }
+        return readCount;
+    }
+
+    /**
+     * @see java.io.BufferedReader#readLine()
+     */
+    public String readLine() throws IOException
+    {
+        if (!ensureBuf())
+        {
+            // End of stream has been reached.
+            return null;
+        }
+        StringBuffer line = new StringBuffer();
+        while (ensureBuf())
+        {
+            if (skipEol())
+            {
+                // End of line found.
+                break;
+            }
+            else
+            {
+                // Append characters to result line.
+                line.append(iBuf[iBufPos++]);
+            }
+        }
+        return line.toString();
+    }
+
+    /**
+     * @see java.io.BufferedReader#ready()
+     */
+    public boolean ready() throws IOException
+    {
+        if (iBufPos < iBufAmount)
+        {
+            return true;
+        }
+        if (reader != null)
+        {
+            return reader.ready();
+        }
+        return false;
+    }
+
+    /**
+     * @see java.io.BufferedReader#skip()
+     */
+    public long skip(long aAmountToSkip) throws IOException
+    {
+        if (aAmountToSkip < 0)
+        {
+            throw new IllegalArgumentException(
+                "BufferedReader: Cannot skip negative amount of characters");
+        }
+        long skipped = 0;
+        int bufCharCount = iBufAmount - iBufPos;
+        if (aAmountToSkip <= bufCharCount)
+        {
+            // There is enough characters in buffer to skip.
+            iBufPos += aAmountToSkip;
+            skipped += aAmountToSkip;
+        }
+        else
+        {
+            // First skip characters that are available in the buffer,
+            // then skip characters from the Reader.
+            iBufPos += bufCharCount;
+            skipped += bufCharCount;
+            if (reader != null)
+            {
+                skipped += reader.skip(aAmountToSkip - skipped);
+            }
+        }
+        return skipped;
+    }
+
+    /**
+     * If current read position in the buffer is end of line,
+     * move position over end of line and return true, otherwise
+     * return false. Also in the end of stream case this method
+     * returns true.
+     */
+    private boolean skipEol() throws IOException
+    {
+        if (!ensureBuf())
+        {
+            // End of stream has been reached.
+            return true;
+        }
+        boolean eolFound = false;
+        if (iBufAmount > iBufPos && iBuf[iBufPos] == '\r')
+        {
+            iBufPos += 1;
+            eolFound = true;
+            ensureBuf();
+        }
+        if (iBufAmount > iBufPos && iBuf[iBufPos] == '\n')
+        {
+            iBufPos += 1;
+            eolFound = true;
+        }
+        return eolFound;
+    }
+
+    /**
+     * Ensures that the buffer has characters to read.
+     *
+     * @return True if the buffer has characters to read,
+     * false if end of stream has been reached.
+     */
+    private boolean ensureBuf() throws IOException
+    {
+        boolean result = true;
+        if (iBufPos >= iBufAmount)
+        {
+            if (fillBuf() == -1)
+            {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Fills the buffer from the Reader and resets the buffer counters.
+     *
+     * @return The number of characters read, or -1 if the end of
+     * stream has been reached.
+     */
+    private int fillBuf() throws IOException
+    {
+        if (reader == null)
+        {
+            return -1;
+        }
+        // Fill the buffer.
+        int readCount = reader.read(iBuf);
+        if (readCount > -1)
+        {
+            // Reset the buffer counters only if reading succeeded.
+            iBufAmount = readCount;
+            iBufPos = 0;
+        }
+        return readCount;
+    }
 
 }
