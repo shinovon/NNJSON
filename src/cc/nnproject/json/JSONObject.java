@@ -21,6 +21,8 @@ SOFTWARE.
 */
 package cc.nnproject.json;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -375,6 +377,46 @@ public class JSONObject extends AbstractJSON {
 			s.append("\n}");
 		}
 		return s.toString();
+	}
+	
+	public void write(OutputStream out) throws IOException {
+		out.write((byte) '{');
+		if (size() == 0) {
+			out.write((byte) '}');
+			return;
+		}
+		Enumeration keys = table.keys();
+		while (true) {
+			String k = (String) keys.nextElement();
+			out.write((byte) '"');
+			JSON.writeString(out, k.toString());
+			out.write((byte) '"');
+			out.write((byte) ':');
+			Object v = table.get(k);
+			if (v instanceof JSONObject) {
+				((JSONObject) v).write(out);
+			} else if (v instanceof JSONArray) {
+				((JSONArray) v).write(out);
+			} else if (v instanceof String) {
+				out.write((byte) '"');
+				JSON.writeString(out, (String) v);
+				out.write((byte) '"');
+			} else if (v instanceof String[]) {
+				out.write((((String[]) v)[0]).getBytes("UTF-8"));
+			} else if (v == JSON.json_null) {
+				out.write((byte) 'n');
+				out.write((byte) 'u');
+				out.write((byte) 'l');
+				out.write((byte) 'l');
+			} else {
+				out.write(String.valueOf(v).getBytes("UTF-8"));
+			}
+			if (!keys.hasMoreElements()) {
+				break;
+			}
+			out.write((byte) ',');
+		}
+		out.write((byte) '}');
 	}
 
 	public Enumeration keys() {

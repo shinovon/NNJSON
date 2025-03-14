@@ -21,6 +21,8 @@ SOFTWARE.
 */
 package cc.nnproject.json;
 
+import java.io.OutputStream;
+
 public abstract class AbstractJSON {
 	
 	// common methods for both JSONObject and JSONArray
@@ -36,6 +38,8 @@ public abstract class AbstractJSON {
 	public final String format() {
 		return format(0);
 	}
+	
+	public abstract void write(OutputStream out);
 	
 	protected abstract String format(int l);
 	

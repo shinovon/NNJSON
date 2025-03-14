@@ -21,6 +21,8 @@ SOFTWARE.
 */
 package cc.nnproject.json;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -491,6 +493,42 @@ public class JSONArray extends AbstractJSON {
 			s.append("\n]");
 		}
 		return s.toString();
+	}
+	
+	public void write(OutputStream out) throws IOException {
+		int size = count;
+		out.write((byte) '[');
+		if (size == 0) {
+			out.write((byte) ']');
+			return;
+		}
+		int i = 0;
+		while (i < size) {
+			Object v = elements[i];
+			if (v instanceof JSONObject) {
+				((JSONObject) v).write(out);
+			} else if (v instanceof JSONArray) {
+				((JSONArray) v).write(out);
+			} else if (v instanceof String) {
+				out.write((byte) '"');
+				JSON.writeString(out, (String) v);
+				out.write((byte) '"');
+			} else if (v instanceof String[]) {
+				out.write((((String[]) v)[0]).getBytes("UTF-8"));
+			} else if (v == JSON.json_null) {
+				out.write((byte) 'n');
+				out.write((byte) 'u');
+				out.write((byte) 'l');
+				out.write((byte) 'l');
+			} else {
+				out.write(String.valueOf(v).getBytes("UTF-8"));
+			}
+			i++;
+			if (i < size) {
+				out.write((byte) ',');
+			}
+		}
+		out.write((byte) '}');
 	}
 
 	public Enumeration elements() {
