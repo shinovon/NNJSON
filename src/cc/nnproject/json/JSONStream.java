@@ -179,6 +179,11 @@ public class JSONStream {
 //		back();
 		
 		while (true) {
+			c = nextTrim();
+			if (c == ',') continue;
+			if (c != '"')
+				throw new RuntimeException("JSON: jumpToKey: malformed object at ".concat(Integer.toString(index)));
+			back();
 			if (nextString(true).equals(key)) {
 				// jump to value
 				if (nextTrim() != ':')
