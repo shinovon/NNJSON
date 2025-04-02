@@ -21,6 +21,7 @@ SOFTWARE.
 */
 package cc.nnproject.json;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 public abstract class AbstractJSON {
@@ -39,7 +40,7 @@ public abstract class AbstractJSON {
 		return format(0);
 	}
 	
-	public abstract void write(OutputStream out);
+	public abstract void write(OutputStream out) throws IOException;
 	
 	protected abstract String format(int l);
 	
