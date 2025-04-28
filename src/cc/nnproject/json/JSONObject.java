@@ -176,18 +176,18 @@ public class JSONObject {
 		}
 	}
 	
-	public double getDouble(String name) {
-		return getDouble(get(name));
-	}
+//	public double getDouble(String name) {
+//		return getDouble(get(name));
+//	}
 
-	public double getDouble(String name, double def) {
-		if (!has(name)) return def;
-		try {
-			return getDouble(name);
-		} catch (Exception e) {
-			return def;
-		}
-	}
+//	public double getDouble(String name, double def) {
+//		if (!has(name)) return def;
+//		try {
+//			return getDouble(name);
+//		} catch (Exception e) {
+//			return def;
+//		}
+//	}
 	
 	public boolean getBoolean(String name) {
 		Object o = get(name);
@@ -238,12 +238,12 @@ public class JSONObject {
 		table.put(name, new Long(l));
 	}
 
-	public void put(String name, double d) {
-		table.put(name, new Double(d));
-	}
+//	public void put(String name, double d) {
+//		table.put(name, new Double(d));
+//	}
 
 	public void put(String name, boolean b) {
-		table.put(name, new Boolean(b));
+		table.put(name, b ? TRUE : FALSE);
 	}
 	
 	public boolean hasValue(Object object) {
@@ -743,19 +743,19 @@ public class JSONObject {
 		return sb.toString();
 	}
 
-	static double getDouble(Object o) {
-		try {
-			if (o instanceof String[])
-				return Double.parseDouble(((String[]) o)[0]);
-			if (o instanceof Integer)
-				return ((Integer) o).intValue();
-			if (o instanceof Long)
-				return ((Long) o).longValue();
-			if (o instanceof Double)
-				return ((Double) o).doubleValue();
-		} catch (Throwable e) {}
-		throw new RuntimeException("JSON: Cast to double failed: " + o);
-	}
+//	static double getDouble(Object o) {
+//		try {
+//			if (o instanceof String[])
+//				return Double.parseDouble(((String[]) o)[0]);
+//			if (o instanceof Integer)
+//				return ((Integer) o).intValue();
+//			if (o instanceof Long)
+//				return ((Long) o).longValue();
+//			if (o instanceof Double)
+//				return ((Double) o).doubleValue();
+//		} catch (Throwable e) {}
+//		throw new RuntimeException("JSON: Cast to double failed: " + o);
+//	}
 
 	static int getInt(Object o) {
 		try {
@@ -765,8 +765,8 @@ public class JSONObject {
 				return ((Integer) o).intValue();
 			if (o instanceof Long)
 				return (int) ((Long) o).longValue();
-			if (o instanceof Double)
-				return ((Double) o).intValue();
+//			if (o instanceof Double)
+//				return ((Double) o).intValue();
 		} catch (Throwable e) {}
 		throw new RuntimeException("JSON: Cast to int failed: " + o);
 	}
@@ -779,8 +779,8 @@ public class JSONObject {
 				return ((Integer) o).longValue();
 			if (o instanceof Long)
 				return ((Long) o).longValue();
-			if (o instanceof Double)
-				return ((Double) o).longValue();
+//			if (o instanceof Double)
+//				return ((Double) o).longValue();
 		} catch (Throwable e) {}
 		throw new RuntimeException("JSON: Cast to long failed: " + o);
 	}
