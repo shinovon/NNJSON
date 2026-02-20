@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021-2025 Arman Jussupgaliyev
+Copyright (c) 2021-2026 Arman Jussupgaliyev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ import java.util.Vector;
  * Usage:<p><code>JSONObject obj = JSON.getObject(str);</code></p>
  * <b>When using proguard, add</b>: <p><code>-optimizations !code/simplification/object</code>
  * @author Shinovon
- * @version 2.4
+ * @version 2.4b
  */
 public final class JSON {
 
@@ -256,7 +256,7 @@ public final class JSON {
 						return new Integer(Integer.parseInt(str.substring(2), 16));
 					}
 					// decimal
-					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || "-0".equals(str))
+					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || str.indexOf('e') != -1 || "-0".equals(str))
 						return new Double(Double.parseDouble(str));
 					if (first == '-') length--;
 					if (length > 8) // (str.length() - (str.charAt(0) == '-' ? 1 : 0)) >= 10

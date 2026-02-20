@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024-2025 Arman Jussupgaliyev
+Copyright (c) 2024-2026 Arman Jussupgaliyev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -652,7 +652,7 @@ public class JSONStream {
 						return new Integer(Integer.parseInt(str.substring(2), 16));
 					}
 					// decimal
-					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || "-0".equals(str))
+					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || str.indexOf('e') != -1 || "-0".equals(str))
 						return new Double(Double.parseDouble(str));
 					if (first == '-') length--;
 					if (length > 8) // (str.length() - (str.charAt(0) == '-' ? 1 : 0)) >= 10
