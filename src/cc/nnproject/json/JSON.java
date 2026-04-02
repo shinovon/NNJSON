@@ -99,9 +99,10 @@ public final class JSON {
 		case '"': { // string
 			if (last != '"')
 				throw new JSONException("Unexpected end of text");
-			if (str.indexOf('\\') != -1) {
+			if (str.indexOf('\\', start) < end) {
 				StringBuffer sb = new StringBuffer();
-				int i = start;
+				int i = start + 1;
+				end--;
 				// parse escaped chars in string
 				loop: {
 					while (i < end) {
