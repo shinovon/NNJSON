@@ -53,7 +53,7 @@ public final class JSON {
 		char c = text.charAt(0);
 		if (c != '{' && c != '[')
 			throw new JSONException("Not JSON object or array");
-		return (AbstractJSON) parseJSON(text.trim());
+		return (AbstractJSON) parseJSON(text, 0, text.length());
 	}
 
 	public static JSONObject getObject(String text) throws JSONException {
@@ -61,7 +61,7 @@ public final class JSON {
 			throw new JSONException("Empty text");
 		if (text.charAt(0) != '{')
 			throw new JSONException("Not JSON object");
-		return (JSONObject) parseJSON(text.trim());
+		return (JSONObject) parseJSON(text, 0, text.length());
 	}
 
 	public static JSONArray getArray(String text) throws JSONException {
@@ -69,7 +69,7 @@ public final class JSON {
 			throw new JSONException("Empty text");
 		if (text.charAt(0) != '[')
 			throw new JSONException("Not JSON array");
-		return (JSONArray) parseJSON(text.trim());
+		return (JSONArray) parseJSON(text, 0, text.length());
 	}
 
 	static Object getJSON(Object obj) throws JSONException {
@@ -85,46 +85,47 @@ public final class JSON {
 		return obj;
 	}
 
-	static Object parseJSON(String str) throws JSONException {
-		char first = str.charAt(0);
-		int length;
-		char last = str.charAt(length = str.length() - 1);
-		if (last <= ' ')
-			last = (str = str.trim()).charAt(length = str.length() - 1);
+	static Object parseJSON(String str, int start, int end) throws JSONException {
+		char first = str.charAt(start);
+		while (first <= ' ') {
+			first = str.charAt(++start);
+		}
+		
+		char last = str.charAt(end - 1);
+		while (last <= ' ') {
+			last = str.charAt((--end) - 1);
+		}
 		switch (first) {
 		case '"': { // string
 			if (last != '"')
 				throw new JSONException("Unexpected end of text");
 			if (str.indexOf('\\') != -1) {
-				char[] chars = str.substring(1, length).toCharArray();
-				str = null;
-				int l = chars.length;
 				StringBuffer sb = new StringBuffer();
-				int i = 0;
+				int i = start;
 				// parse escaped chars in string
 				loop: {
-					while (i < l) {
-						char c = chars[i];
+					while (i < end) {
+						char c = str.charAt(i);
 						switch (c) {
 						case '\\': {
 							next: {
 								replace: {
-									if (l < i + 1) {
+									if (end < i + 1) {
 										sb.append(c);
 										break loop;
 									}
-									char c1 = chars[i + 1];
+									char c1 = str.charAt(i + 1);
 									switch (c1) {
 									case 'u':
 										i+=2;
 										sb.append((char) Integer.parseInt(
-												new String(new char[] {chars[i++], chars[i++], chars[i++], chars[i++]}),
+												new String(new char[] {str.charAt(i++), str.charAt(i++), str.charAt(i++), str.charAt(i++)}),
 												16));
 										break replace;
 									case 'x':
 										i+=2;
 										sb.append((char) Integer.parseInt(
-												new String(new char[] {chars[i++], chars[i++]}),
+												new String(new char[] {str.charAt(i++), str.charAt(i++)}),
 												16));
 										break replace;
 									case 'n':
@@ -174,7 +175,7 @@ public final class JSON {
 				sb = null;
 				return str;
 			}
-			return str.substring(1, length);
+			return str.substring(1 + start, end - 1);
 		}
 		case '{': // JSON object or array
 		case '[': {
@@ -182,19 +183,19 @@ public final class JSON {
 			if (object ? last != '}' : last != ']')
 				throw new JSONException("Unexpected end of text");
 			int brackets = 0;
-			int i = 1;
+			int i = start + 1;
 			char nextDelimiter = object ? ':' : ',';
 			boolean escape = false;
 			String key = null;
 			Object res = object ? (Object) new JSONObject() : (Object) new JSONArray();
 			
-			for (int splIndex; i < length; i = splIndex + 1) {
+			for (int splIndex; i < end - 1; i = splIndex + 1) {
 				// skip all spaces
-				for (; i < length - 1 && str.charAt(i) <= ' '; i++);
+				for (; i < end - 1 && str.charAt(i) <= ' '; i++);
 
 				splIndex = i;
 				boolean quote = false;
-				for (; splIndex < length && (quote || brackets > 0 || str.charAt(splIndex) != nextDelimiter); splIndex++) {
+				for (; splIndex < end - 1 && (quote || brackets > 0 || str.charAt(splIndex) != nextDelimiter); splIndex++) {
 					char c = str.charAt(splIndex);
 					if (!escape) {
 						if (c == '\\') {
@@ -219,16 +220,19 @@ public final class JSON {
 				}
 
 				if (object && key == null) {
-					key = str.substring(i, splIndex);
-					key = key.substring(1, key.length() - 1);
+					key = str.substring(i + 1, str.lastIndexOf('"', splIndex));
 					nextDelimiter = ',';
+				} else if (i == splIndex) {
+					throw new JSONException("Empty value");
 				} else {
-					Object value = str.substring(i, splIndex).trim();
-					// don't check length because if value is empty, then exception is going to be thrown anyway
-					char c = ((String) value).charAt(0);
-					// leave JSONString as value to parse it later, if its object or array and nested parsing is disabled
-					value = parse_members || (c != '{' && c != '[') ?
-							parseJSON((String) value) : new String[] {(String) value};
+					char c = str.charAt(i);
+					Object value;
+					if (parse_members || (c != '{' && c != '[')) {
+						value = parseJSON(str, i, splIndex);
+					} else {
+						// leave value as JSONString to parse it later
+						value = new String[] {(String) str.substring(i, splIndex)};
+					}
 					if (object) {
 						((JSONObject) res)._put(key, value);
 						key = null;
@@ -247,26 +251,33 @@ public final class JSON {
 		case 'f': // false
 			return FALSE;
 		default: // number
+			int l = end - start;
 			if ((first >= '0' && first <= '9') || first == '-') {
 				try {
 					// hex
-					if (length > 1 && first == '0' && str.charAt(1) == 'x') {
-						if (length > 9) // str.length() > 10
-							return new Long(Long.parseLong(str.substring(2), 16));
-						return new Integer(Integer.parseInt(str.substring(2), 16));
+					if (l > 1 && first == '0' && str.charAt(start + 1) == 'x') {
+						if (l > 9) // str.length() > 10
+							return new Long(Long.parseLong(str.substring(start + 2, end), 16));
+						return new Integer(Integer.parseInt(str.substring(start + 2, end), 16));
 					}
+					str = str.substring(start, end);
 					// decimal
 					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || str.indexOf('e') != -1 || "-0".equals(str))
 						return new Double(Double.parseDouble(str));
-					if (first == '-') length--;
-					if (length > 8) // (str.length() - (str.charAt(0) == '-' ? 1 : 0)) >= 10
+					if (first == '-') l--;
+					if (l > 8) // (str.length() - (str.charAt(0) == '-' ? 1 : 0)) >= 10
 						return new Long(Long.parseLong(str));
 					return new Integer(Integer.parseInt(str));
 				} catch (Exception e) {}
 			}
 			throw new JSONException("Couldn't be parsed: " + str);
-//			return new String[](str);
+//			return new String[]{str};
 		}
+	}
+	
+	// compatibility
+	static Object parseJSON(String str) throws JSONException {
+		return parseJSON(str, 0, str.length());
 	}
 	
 	public static boolean isNull(Object obj) {
