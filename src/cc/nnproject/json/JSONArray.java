@@ -49,7 +49,7 @@ public class JSONArray {
 	 * @deprecated Compatibility with org.json
 	 */
 	public JSONArray(String str) {
-		JSONArray tmp = JSONObject.parseArray(str);
+		JSONArray tmp = parseArray(str);
 		elements = tmp.elements;
 		count = tmp.count;
 	}
@@ -170,18 +170,6 @@ public class JSONArray {
 		}
 	}
 	
-//	public double getDouble(int index) {
-//		return JSONObject.getDouble(get(index));
-//	}
-
-//	public double getDouble(int index, double def) {
-//		try {
-//			return getDouble(index);
-//		} catch (Exception e) {
-//			return def;
-//		}
-//	}
-	
 	public boolean getBoolean(int index) {
 		Object o = get(index);
 		if (o == JSONObject.TRUE) return true;
@@ -231,10 +219,6 @@ public class JSONArray {
 	public void add(long l) {
 		addElement(new Long(l));
 	}
-
-//	public void add(double d) {
-//		addElement(new Double(d));
-//	}
 	
 	public void add(boolean b) {
 		addElement(b ? JSONObject.TRUE : JSONObject.FALSE);
@@ -278,13 +262,6 @@ public class JSONArray {
 		}
 		elements[index] = new Long(l);
 	}
-
-//	public void set(int index, double d) {
-//		if (index < 0 || index >= count) {
-//			throw new RuntimeException("JSON: Index out of bounds: " + index);
-//		}
-//		elements[index] = new Double(d);
-//	}
 	
 	public void set(int index, boolean b) {
 		if (index < 0 || index >= count) {
@@ -317,10 +294,6 @@ public class JSONArray {
 		insertElementAt(new Long(l), index);
 	}
 
-//	public void put(int index, double d) {
-//		insertElementAt(new Double(d), index);
-//	}
-
 	public void put(int index, boolean b) {
 		insertElementAt(b ? JSONObject.TRUE : JSONObject.FALSE, index);
 	}
@@ -336,10 +309,6 @@ public class JSONArray {
 	public boolean has(long l) {
 		return _indexOf(new Long(l), 0) != -1;
 	}
-
-//	public boolean has(double d) {
-//		return _indexOf(new Double(d), 0) != -1;
-//	}
 	
 	public boolean has(boolean b) {
 		return _indexOf(b ? JSONObject.TRUE : JSONObject.FALSE, 0) != -1;
@@ -603,6 +572,14 @@ public class JSONArray {
 		Object[] tmp = new Object[elements.length * 2];
 		System.arraycopy(elements, 0, tmp, 0, count);
 		elements = tmp;
+	}
+
+	public static JSONArray parseArray(String text) {
+		if (text == null || text.length() <= 1)
+			throw new RuntimeException("JSON: Empty text");
+		if (text.charAt(0) != '[')
+			throw new RuntimeException("JSON: Not JSON array");
+		return (JSONArray) JSONObject.parseJSON(text);
 	}
 
 }

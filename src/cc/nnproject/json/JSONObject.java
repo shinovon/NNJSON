@@ -32,7 +32,7 @@ import java.util.Vector;
  * Usage:<p><code>JSONObject obj = getObject(str);</code></p>
  * <b>Use with proguard argument</b>: <p><code>-optimizations !code/simplification/object</code>
  * @author Shinovon
- * @version 2.4 (Shrinked)
+ * @version 2.5 (Shrinked)
  */
 public class JSONObject {
 
@@ -176,19 +176,6 @@ public class JSONObject {
 		}
 	}
 	
-//	public double getDouble(String name) {
-//		return getDouble(get(name));
-//	}
-
-//	public double getDouble(String name, double def) {
-//		if (!has(name)) return def;
-//		try {
-//			return getDouble(name);
-//		} catch (Exception e) {
-//			return def;
-//		}
-//	}
-	
 	public boolean getBoolean(String name) {
 		Object o = get(name);
 		if (o == TRUE) return true;
@@ -237,10 +224,6 @@ public class JSONObject {
 	public void put(String name, long l) {
 		table.put(name, new Long(l));
 	}
-
-//	public void put(String name, double d) {
-//		table.put(name, new Double(d));
-//	}
 
 	public void put(String name, boolean b) {
 		table.put(name, b ? TRUE : FALSE);
@@ -488,13 +471,13 @@ public class JSONObject {
 			throw new RuntimeException("JSON: Not JSON object: " + text);
 		return (JSONObject) parseJSON(text);
 	}
-
+	
+	/**
+	 * Compatibility
+	 * @deprecated Use {@link JSONArray#parseArray(String)} instead
+	 */
 	public static JSONArray parseArray(String text) {
-		if (text == null || text.length() <= 1)
-			throw new RuntimeException("JSON: Empty text");
-		if (text.charAt(0) != '[')
-			throw new RuntimeException("JSON: Not JSON array");
-		return (JSONArray) parseJSON(text);
+		return JSONArray.parseArray(text);
 	}
 
 	static Object getJSON(Object obj) {
@@ -510,46 +493,47 @@ public class JSONObject {
 		return obj;
 	}
 
-	public static Object parseJSON(String str) {
-		char first = str.charAt(0);
-		int length;
-		char last = str.charAt(length = str.length() - 1);
-		if (last <= ' ')
-			last = (str = str.trim()).charAt(length = str.length() - 1);
-		switch(first) {
+	static Object parseJSON(String str, int start, int end) {
+		char first = str.charAt(start);
+		while (first <= ' ') {
+			first = str.charAt(++start);
+		}
+		
+		char last = str.charAt(end - 1);
+		while (last <= ' ') {
+			last = str.charAt((--end) - 1);
+		}
+		switch (first) {
 		case '"': { // string
 			if (last != '"')
 				throw new RuntimeException("JSON: Unexpected end of text");
-			if(str.indexOf('\\') != -1) {
-				char[] chars = str.substring(1, length).toCharArray();
-				str = null;
-				int l = chars.length;
+			if (str.indexOf('\\') != -1) {
 				StringBuffer sb = new StringBuffer();
-				int i = 0;
+				int i = start;
 				// parse escaped chars in string
 				loop: {
-					while (i < l) {
-						char c = chars[i];
+					while (i < end) {
+						char c = str.charAt(i);
 						switch (c) {
 						case '\\': {
 							next: {
 								replace: {
-									if (l < i + 1) {
+									if (end < i + 1) {
 										sb.append(c);
 										break loop;
 									}
-									char c1 = chars[i + 1];
+									char c1 = str.charAt(i + 1);
 									switch (c1) {
 									case 'u':
 										i+=2;
 										sb.append((char) Integer.parseInt(
-												new String(new char[] {chars[i++], chars[i++], chars[i++], chars[i++]}),
+												new String(new char[] {str.charAt(i++), str.charAt(i++), str.charAt(i++), str.charAt(i++)}),
 												16));
 										break replace;
 									case 'x':
 										i+=2;
 										sb.append((char) Integer.parseInt(
-												new String(new char[] {chars[i++], chars[i++]}),
+												new String(new char[] {str.charAt(i++), str.charAt(i++)}),
 												16));
 										break replace;
 									case 'n':
@@ -599,7 +583,7 @@ public class JSONObject {
 				sb = null;
 				return str;
 			}
-			return str.substring(1, length);
+			return str.substring(1 + start, end - 1);
 		}
 		case '{': // JSON object or array
 		case '[': {
@@ -607,19 +591,19 @@ public class JSONObject {
 			if (object ? last != '}' : last != ']')
 				throw new RuntimeException("JSON: Unexpected end of text");
 			int brackets = 0;
-			int i = 1;
+			int i = start + 1;
 			char nextDelimiter = object ? ':' : ',';
 			boolean escape = false;
 			String key = null;
 			Object res = object ? (Object) new JSONObject() : (Object) new JSONArray();
 			
-			for (int splIndex; i < length; i = splIndex + 1) {
+			for (int splIndex; i < end - 1; i = splIndex + 1) {
 				// skip all spaces
-				for (; i < length - 1 && str.charAt(i) <= ' '; i++);
+				for (; i < end - 1 && str.charAt(i) <= ' '; i++);
 
 				splIndex = i;
 				boolean quote = false;
-				for (; splIndex < length && (quote || brackets > 0 || str.charAt(splIndex) != nextDelimiter); splIndex++) {
+				for (; splIndex < end - 1 && (quote || brackets > 0 || str.charAt(splIndex) != nextDelimiter); splIndex++) {
 					char c = str.charAt(splIndex);
 					if (!escape) {
 						if (c == '\\') {
@@ -644,16 +628,19 @@ public class JSONObject {
 				}
 
 				if (object && key == null) {
-					key = str.substring(i, splIndex);
-					key = key.substring(1, key.length() - 1);
+					key = str.substring(i + 1, str.lastIndexOf('"', splIndex));
 					nextDelimiter = ',';
+				} else if (i == splIndex) {
+					throw new RuntimeException("JSON: Empty value");
 				} else {
-					Object value = str.substring(i, splIndex).trim();
-					// don't check length because if value is empty, then exception is going to be thrown anyway
-					char c = ((String) value).charAt(0);
-					// leave JSONString as value to parse it later, if its object or array and nested parsing is disabled
-					value = parse_members || (c != '{' && c != '[') ?
-							parseJSON((String) value) : new String[] {(String) value};
+					char c = str.charAt(i);
+					Object value;
+					if (parse_members || (c != '{' && c != '[')) {
+						value = parseJSON(str, i, splIndex);
+					} else {
+						// leave value as JSONString to parse it later
+						value = new String[] {(String) str.substring(i, splIndex)};
+					}
 					if (object) {
 						((JSONObject) res).table.put(key, value);
 						key = null;
@@ -672,27 +659,33 @@ public class JSONObject {
 		case 'f': // false
 			return FALSE;
 		default: // number
+			int l = end - start;
 			if ((first >= '0' && first <= '9') || first == '-') {
 				try {
 					// hex
-					if (length > 1 && first == '0' && str.charAt(1) == 'x') {
-						if (length > 9) // str.length() > 10
-							return new Long(Long.parseLong(str.substring(2), 16));
-						return new Integer(Integer.parseInt(str.substring(2), 16));
+					if (l > 1 && first == '0' && str.charAt(start + 1) == 'x') {
+						if (l > 9) // str.length() > 10
+							return new Long(Long.parseLong(str.substring(start + 2, end), 16));
+						return new Integer(Integer.parseInt(str.substring(start + 2, end), 16));
 					}
+					str = str.substring(start, end);
 					// decimal
-					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || "-0".equals(str))
-//						return new Double(Double.parseDouble(str));
+					if (str.indexOf('.') != -1 || str.indexOf('E') != -1 || str.indexOf('e') != -1 || "-0".equals(str))
 						return str;
-					if (first == '-') length--;
-					if (length > 8) // (str.length() - (str.charAt(0) == '-' ? 1 : 0)) >= 10
+					if (first == '-') l--;
+					if (l > 8) // (str.length() - (str.charAt(0) == '-' ? 1 : 0)) >= 10
 						return new Long(Long.parseLong(str));
 					return new Integer(Integer.parseInt(str));
 				} catch (Exception e) {}
 			}
 			throw new RuntimeException("JSON: Couldn't be parsed: " + str);
-//			return new JSONString(str);
+//			return new String[]{str};
 		}
+	}
+	
+	// compatibility
+	static Object parseJSON(String str) {
+		return parseJSON(str, 0, str.length());
 	}
 	
 	public static boolean isNull(Object obj) {
@@ -743,20 +736,6 @@ public class JSONObject {
 		return sb.toString();
 	}
 
-//	static double getDouble(Object o) {
-//		try {
-//			if (o instanceof String[])
-//				return Double.parseDouble(((String[]) o)[0]);
-//			if (o instanceof Integer)
-//				return ((Integer) o).intValue();
-//			if (o instanceof Long)
-//				return ((Long) o).longValue();
-//			if (o instanceof Double)
-//				return ((Double) o).doubleValue();
-//		} catch (Throwable e) {}
-//		throw new RuntimeException("JSON: Cast to double failed: " + o);
-//	}
-
 	static int getInt(Object o) {
 		try {
 			if (o instanceof String[])
@@ -765,8 +744,6 @@ public class JSONObject {
 				return ((Integer) o).intValue();
 			if (o instanceof Long)
 				return (int) ((Long) o).longValue();
-//			if (o instanceof Double)
-//				return ((Double) o).intValue();
 		} catch (Throwable e) {}
 		throw new RuntimeException("JSON: Cast to int failed: " + o);
 	}
@@ -779,8 +756,6 @@ public class JSONObject {
 				return ((Integer) o).longValue();
 			if (o instanceof Long)
 				return ((Long) o).longValue();
-//			if (o instanceof Double)
-//				return ((Double) o).longValue();
 		} catch (Throwable e) {}
 		throw new RuntimeException("JSON: Cast to long failed: " + o);
 	}
