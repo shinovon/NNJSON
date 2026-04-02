@@ -31,7 +31,7 @@ import java.util.Vector;
  * Usage:<p><code>JSONObject obj = JSON.getObject(str);</code></p>
  * <b>When using proguard, add</b>: <p><code>-optimizations !code/simplification/object</code>
  * @author Shinovon
- * @version 2.4b
+ * @version 2.5
  */
 public final class JSON {
 
