@@ -43,7 +43,7 @@ public class JSONStream {
 	private JSONStream() {}
 	
 	private void init(InputStream in) throws IOException {
-		reader = new InputStreamReader(in, "UTF-8");
+		reader = new InputStreamReader(in, encoding);
 		if (buffer) {
 			reader = new BufferedReader(reader);
 		}

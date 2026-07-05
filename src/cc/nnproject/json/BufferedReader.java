@@ -1,303 +1,116 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
-* All rights reserved.
-* This component and the accompanying materials are made available
-* under the terms of "Eclipse Public License v1.0"
-* which accompanies this distribution, and is available
-* at the URL "http://www.eclipse.org/legal/epl-v10.html".
-*
-* Initial Contributors:
-* Nokia Corporation - initial contribution.
-*
-* Contributors:
-*
-* Description:
-*
+Copyright (c) 2026 Arman Jussupgaliyev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
-
-
 package cc.nnproject.json;
 
 import java.io.IOException;
 import java.io.Reader;
 
-/**
- * Buffered wrapper for Readers.
- *
- * @see java.io.BufferedReader
- */
-public class BufferedReader extends Reader
-{
-    /** Default buffer size. */
-    private static final int BUF_SIZE = 16384;
+public class BufferedReader extends Reader {
+	
+	private Reader in;
+	private char[] buffer;
+	private int idx;
+	private int length;
+	
+	public BufferedReader(Reader in) {
+		this(in, 16384);
+	}
+	
+	public BufferedReader(Reader in, int size) {
+		this.in = in;
+		buffer = new char[size];
+	}
+	
+	public void close() throws IOException {
+		in.close();
+		buffer = null;
+	}
+	
+	public int read() throws IOException {
+		if (idx >= length && !fill()) {
+			return -1;
+		}
+		return buffer[idx++];
+	}
 
-    /** Reader given in the constructor. */
-    private Reader iReader = null;
+	public int read(char[] b) throws IOException {
+		return read(b, 0, b.length);
+	}
+	
+	public int read(char[] b, int off, int len) throws IOException {
+		if (off < 0 || len < 0 || len > b.length - off) {
+			throw new IllegalArgumentException();
+		}
+		if (len == 0) return 0;
+		
+		int n = b.length - off;
+		if (n > len) n = len;
+		int left = length - idx;
+		
+		if (n <= left) {
+			System.arraycopy(buffer, idx, b, off, n);
+			idx += n;
+			return n;
+		}
+		
+		if (left != 0) {
+			System.arraycopy(buffer, idx, b, off, left);
+			idx += left;
+		}
+		
+		if (fill()) {
+			return left + read(b, off + left, len - left);
+		}
+		
+		return left == 0 ? -1 : left;
+	}
+	
+	public long skip(long n) throws IOException {
+		if (n < 0) {
+			throw new IllegalArgumentException();
+		}
+		
+		int left = length - idx;
+		if (n <= left) {
+			idx += n;
+			return n;
+		}
+		
+		idx += left;
+		return left + in.skip(n - left);
+	}
+	
+	public boolean ready() throws IOException {
+		return idx < length || in.ready();
+	}
+	
+	private boolean fill() throws IOException {
+		int r = in.read(buffer);
+		if (r != -1) {
+			idx = 0;
+			length = r;
+			return true;
+		}
+		return false;
+	}
 
-    /** Character buffer. */
-    private char[] iBuf = null;
-
-    /** Amount of characters in the buffer.
-        Value must be between zero and iBuf.length. */
-    private int iBufAmount = 0;
-
-    /** Current read position in the buffer.
-        Value must be between zero and iBuf.length. */
-    private int iBufPos = 0;
-
-    /**
-     * @see java.io.BufferedReader#Constructor(java.io.Reader)
-     */
-    public BufferedReader(Reader aIn)
-    {
-        this(aIn, BUF_SIZE);
-    }
-
-    /**
-     * @see java.io.BufferedReader#Constructor(java.io.Reader, int)
-     */
-    public BufferedReader(Reader aIn, int aSize)
-    {
-        if (aSize <= 0)
-        {
-            throw new IllegalArgumentException(
-                "BufferedReader: Invalid buffer size");
-        }
-        iBuf = new char[aSize];
-        iReader = aIn;
-    }
-
-    /**
-     * @see java.io.BufferedReader#close()
-     */
-    public void close() throws IOException
-    {
-        iBuf = null;
-        iBufAmount = 0;
-        iBufPos = 0;
-        if (iReader != null)
-        {
-            iReader.close();
-        }
-    }
-
-    /**
-     * @see java.io.BufferedReader#read()
-     */
-    public int read() throws IOException
-    {
-        int result = 0;
-        if (iBufPos >= iBufAmount)
-        {
-            result = fillBuf();
-        }
-        if (result > -1)
-        {
-            result = iBuf[iBufPos++];
-        }
-        return result;
-    }
-
-    /**
-     * @see java.io.BufferedReader#read(char[])
-     */
-    public int read(char[] aBuf) throws IOException
-    {
-        return read(aBuf, 0, aBuf.length);
-    }
-
-    /**
-     * @see java.io.BufferedReader#read(char[], int, int)
-     */
-    public int read(char[] aBuf, int aOffset, int aLength) throws IOException
-    {
-        if (aOffset < 0 || aOffset >= aBuf.length)
-        {
-            throw new IllegalArgumentException(
-                "BufferedReader: Invalid buffer offset");
-        }
-        int charsToRead = aBuf.length - aOffset;
-        if (charsToRead > aLength)
-        {
-            charsToRead = aLength;
-        }
-        int bufCharCount = iBufAmount - iBufPos;
-        int readCount = 0;
-        if (charsToRead <= bufCharCount)
-        {
-            // All characters can be read from the buffer.
-            for (int i = 0; i < charsToRead; i++)
-            {
-                aBuf[aOffset+i] = iBuf[iBufPos++];
-            }
-            readCount += charsToRead;
-        }
-        else
-        {
-            // First read characters from the buffer,
-            // then read more characters from the Reader.
-            for (int i = 0; i < bufCharCount; i++)
-            {
-                aBuf[aOffset+i] = iBuf[iBufPos++];
-            }
-            readCount += bufCharCount;
-            // Whole buffer has now been read, fill the buffer again.
-            if (fillBuf() > -1)
-            {
-                // Read the remaining characters.
-                readCount += read(aBuf, aOffset+readCount, aLength-readCount);
-            }
-        }
-        if (readCount <= 0)
-        {
-            // Nothing has been read, return -1 to indicate end of stream.
-            readCount = -1;
-        }
-        return readCount;
-    }
-
-    /**
-     * @see java.io.BufferedReader#readLine()
-     */
-    public String readLine() throws IOException
-    {
-        if (!ensureBuf())
-        {
-            // End of stream has been reached.
-            return null;
-        }
-        StringBuffer line = new StringBuffer();
-        while (ensureBuf())
-        {
-            if (skipEol())
-            {
-                // End of line found.
-                break;
-            }
-            else
-            {
-                // Append characters to result line.
-                line.append(iBuf[iBufPos++]);
-            }
-        }
-        return line.toString();
-    }
-
-    /**
-     * @see java.io.BufferedReader#ready()
-     */
-    public boolean ready() throws IOException
-    {
-        if (iBufPos < iBufAmount)
-        {
-            return true;
-        }
-        if (iReader != null)
-        {
-            return iReader.ready();
-        }
-        return false;
-    }
-
-    /**
-     * @see java.io.BufferedReader#skip()
-     */
-    public long skip(long aAmountToSkip) throws IOException
-    {
-        if (aAmountToSkip < 0)
-        {
-            throw new IllegalArgumentException(
-                "BufferedReader: Cannot skip negative amount of characters");
-        }
-        long skipped = 0;
-        int bufCharCount = iBufAmount - iBufPos;
-        if (aAmountToSkip <= bufCharCount)
-        {
-            // There is enough characters in buffer to skip.
-            iBufPos += aAmountToSkip;
-            skipped += aAmountToSkip;
-        }
-        else
-        {
-            // First skip characters that are available in the buffer,
-            // then skip characters from the Reader.
-            iBufPos += bufCharCount;
-            skipped += bufCharCount;
-            if (iReader != null)
-            {
-                skipped += iReader.skip(aAmountToSkip - skipped);
-            }
-        }
-        return skipped;
-    }
-
-    /**
-     * If current read position in the buffer is end of line,
-     * move position over end of line and return true, otherwise
-     * return false. Also in the end of stream case this method
-     * returns true.
-     */
-    private boolean skipEol() throws IOException
-    {
-        if (!ensureBuf())
-        {
-            // End of stream has been reached.
-            return true;
-        }
-        boolean eolFound = false;
-        if (iBufAmount > iBufPos && iBuf[iBufPos] == '\r')
-        {
-            iBufPos += 1;
-            eolFound = true;
-            ensureBuf();
-        }
-        if (iBufAmount > iBufPos && iBuf[iBufPos] == '\n')
-        {
-            iBufPos += 1;
-            eolFound = true;
-        }
-        return eolFound;
-    }
-
-    /**
-     * Ensures that the buffer has characters to read.
-     *
-     * @return True if the buffer has characters to read,
-     * false if end of stream has been reached.
-     */
-    private boolean ensureBuf() throws IOException
-    {
-        boolean result = true;
-        if (iBufPos >= iBufAmount)
-        {
-            if (fillBuf() == -1)
-            {
-                result = false;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Fills the buffer from the Reader and resets the buffer counters.
-     *
-     * @return The number of characters read, or -1 if the end of
-     * stream has been reached.
-     */
-    private int fillBuf() throws IOException
-    {
-        if (iReader == null)
-        {
-            return -1;
-        }
-        // Fill the buffer.
-        int readCount = iReader.read(iBuf);
-        if (readCount > -1)
-        {
-            // Reset the buffer counters only if reading succeeded.
-            iBufAmount = readCount;
-            iBufPos = 0;
-        }
-        return readCount;
-    }
 }
