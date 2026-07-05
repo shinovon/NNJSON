@@ -32,7 +32,7 @@ import java.util.Vector;
  * Usage:<p><code>JSONObject obj = getObject(str);</code></p>
  * <b>Use with proguard argument</b>: <p><code>-optimizations !code/simplification/object</code>
  * @author Shinovon
- * @version 2.5 (Shrinked)
+ * @version 2.5a (Shrinked)
  */
 public class JSONObject {
 
